@@ -1,0 +1,666 @@
+<!DOCTYPE html>
+<html lang="en" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Chat - Powered by Puter.js</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://js.puter.com/v2/"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            50: '#f5f3ff',
+                            100: '#ede9fe',
+                            200: '#ddd6fe',
+                            300: '#c4b5fd',
+                            400: '#a78bfa',
+                            500: '#8b5cf6',
+                            600: '#7c3aed',
+                            700: '#6d28d9',
+                            800: '#5b21b6',
+                            900: '#4c1d95',
+                        }
+                    },
+                    animation: {
+                        'pulse-fast': 'pulse 1s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .chat-container {
+            height: calc(100vh - 230px);
+            overflow-y: auto;
+            scrollbar-width: thin;
+            scroll-behavior: smooth; /* Smooth scrolling for better UX */
+        }
+        .chat-container::-webkit-scrollbar {
+            width: 6px;
+        }
+        .chat-container::-webkit-scrollbar-thumb {
+            background-color: rgba(156, 163, 175, 0.5);
+            border-radius: 3px;
+        }
+        .typing-indicator {
+            display: inline-flex;
+            align-items: center;
+        }
+        .typing-indicator span {
+            height: 8px;
+            width: 8px;
+            margin: 0 1px;
+            background-color: #9ca3af;
+            border-radius: 50%;
+            display: inline-block;
+            animation: bounce 1.5s infinite ease-in-out;
+        }
+        
+        html.dark .typing-indicator span {
+            background-color: #6b7280;
+        }
+        
+        .typing-indicator span:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+        .typing-indicator span:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+        @keyframes bounce {
+            0%, 60%, 100% {
+                transform: translateY(0);
+            }
+            30% {
+                transform: translateY(-4px);
+            }
+        }
+        
+        /* Optimized loading animation */
+        @keyframes shimmer {
+            0% {
+                background-position: -200px 0;
+            }
+            100% {
+                background-position: 200px 0;
+            }
+        }
+        
+        .loading-shimmer {
+            background: linear-gradient(to right, rgba(0,0,0,0.05) 0%, rgba(0,0,0,0.1) 20%, rgba(0,0,0,0.05) 40%);
+            background-size: 600px 100%;
+            animation: shimmer 1.5s infinite linear;
+        }
+        
+        html.dark .loading-shimmer {
+            background: linear-gradient(to right, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.1) 20%, rgba(255,255,255,0.05) 40%);
+            background-size: 600px 100%;
+        }
+        
+        /* Popup helper visualization */
+        .popup-helper {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+            cursor: pointer;
+        }
+        .popup-helper.active {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+        }
+        .popup-helper-content {
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            max-width: 500px;
+            margin-top: 50px;
+            text-align: center;
+        }
+        
+        html.dark .popup-helper-content {
+            background-color: #1f2937;
+            color: white;
+        }
+        
+        .popup-indicator {
+            position: absolute;
+            top: 15px;
+            right: 30px;
+            width: 100px;
+            height: 50px;
+            border: 3px solid #fbbf24;
+            border-radius: 5px;
+            animation: pulse 1.5s infinite;
+        }
+        .browser-img {
+            max-width: 100%;
+            height: auto;
+            border: 1px solid #e5e7eb;
+            border-radius: 5px;
+            margin: 15px 0;
+        }
+        
+        html.dark .browser-img {
+            border-color: #4b5563;
+        }
+        
+        @keyframes pulse {
+            0%, 100% {
+                box-shadow: 0 0 0 0 rgba(251, 191, 36, 0.7);
+            }
+            50% {
+                box-shadow: 0 0 0 10px rgba(251, 191, 36, 0);
+            }
+        }
+        /* Pre-auth frame */
+        #pre-auth-frame {
+            width: 1px;
+            height: 1px;
+            position: absolute;
+            left: -100px;
+            top: -100px;
+            opacity: 0.01;
+            pointer-events: none;
+            overflow: hidden;
+        }
+        /* History panel */
+        .history-panel {
+            position: fixed;
+            top: 0;
+            left: -320px;
+            width: 320px;
+            height: 100vh;
+            background-color: white;
+            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+            z-index: 100;
+            transition: left 0.3s ease;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        html.dark .history-panel {
+            background-color: #1f2937;
+            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.3);
+        }
+        
+        .history-panel.active {
+            left: 0;
+        }
+        .history-list {
+            flex: 1;
+            overflow-y: auto;
+            scrollbar-width: thin;
+        }
+        .history-list::-webkit-scrollbar {
+            width: 4px;
+        }
+        .history-list::-webkit-scrollbar-thumb {
+            background-color: rgba(156, 163, 175, 0.5);
+            border-radius: 2px;
+        }
+        /* Model selector styling */
+        #model-selector {
+            min-width: 200px;
+        }
+        #model-selector optgroup {
+            font-weight: bold;
+            background-color: rgba(0, 0, 0, 0.1);
+        }
+        
+        html.dark #model-selector optgroup {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+        
+        #model-selector option {
+            padding: 5px;
+            background-color: #4b3f72;
+        }
+        
+        /* New styles for improved UI/UX */
+        /* Message transitions */
+        .chat-container .flex-col > div {
+            transition: opacity 0.3s, transform 0.3s;
+            animation: messageAppear 0.3s forwards;
+        }
+        @keyframes messageAppear {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        /* Input field styling */
+        #user-input {
+            transition: all 0.2s ease;
+            min-height: 42px;
+            max-height: 150px;
+            resize: none;
+            overflow-y: hidden;
+        }
+        #user-input:focus {
+            box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.2);
+        }
+        
+        html.dark #user-input:focus {
+            box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.4);
+        }
+        
+        /* Model selection highlighting */
+        .model-tag {
+            display: inline-block;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            margin-right: 4px;
+            background-color: rgba(124, 58, 237, 0.1);
+            color: #7c3aed;
+        }
+        
+        html.dark .model-tag {
+            background-color: rgba(124, 58, 237, 0.2);
+        }
+        
+        /* Response time badge */
+        .response-time {
+            display: inline-flex;
+            align-items: center;
+            font-size: 0.7rem;
+            color: #6b7280;
+            background-color: #f3f4f6;
+            padding: 2px 6px;
+            border-radius: 4px;
+            margin-top: 4px;
+        }
+        
+        html.dark .response-time {
+            background-color: #374151;
+            color: #9ca3af;
+        }
+        
+        /* Button hover effects */
+        button {
+            transition: all 0.2s ease;
+        }
+        
+        /* High contrast focus styles for accessibility */
+        button:focus, 
+        select:focus, 
+        input:focus,
+        textarea:focus {
+            outline: 2px solid #7c3aed;
+            outline-offset: 2px;
+        }
+        
+        /* Better mobile support */
+        @media (max-width: 640px) {
+            .chat-container {
+                height: calc(100vh - 200px);
+            }
+            
+            .history-panel {
+                width: 280px;
+            }
+            
+            #model-selector {
+                min-width: 150px;
+            }
+        }
+        
+        /* Dark mode styles */
+        html.dark body {
+            background-color: #111827;
+            color: #f3f4f6;
+        }
+        
+        html.dark .bg-white {
+            background-color: #1f2937;
+        }
+        
+        html.dark .bg-gray-50 {
+            background-color: #111827;
+        }
+        
+        html.dark .bg-gray-100 {
+            background-color: #1f2937;
+        }
+        
+        html.dark .bg-gray-200 {
+            background-color: #374151;
+        }
+        
+        html.dark .text-gray-500 {
+            color: #9ca3af;
+        }
+        
+        html.dark .text-gray-600 {
+            color: #d1d5db;
+        }
+        
+        html.dark .text-gray-700 {
+            color: #e5e7eb;
+        }
+        
+        html.dark .text-gray-800 {
+            color: #f3f4f6;
+        }
+        
+        html.dark .border-gray-200 {
+            border-color: #374151;
+        }
+        
+        html.dark .border-gray-300 {
+            border-color: #4b5563;
+        }
+        
+        /* Speed meter styling */
+        .speed-meter {
+            height: 4px;
+            background-color: #e5e7eb;
+            border-radius: 2px;
+            overflow: hidden;
+            margin: 8px 0;
+        }
+        
+        html.dark .speed-meter {
+            background-color: #4b5563;
+        }
+        
+        .speed-meter-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #34d399 0%, #fbbf24 50%, #ef4444 100%);
+            border-radius: 2px;
+            transition: width 0.3s ease;
+        }
+        
+        /* Performance mode styles */
+        .performance-toggle, .thinking-toggle {
+            position: relative;
+            display: inline-block;
+            width: 48px;
+            height: 24px;
+        }
+        
+        .performance-toggle input, .thinking-toggle input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        
+        .performance-slider, .thinking-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 24px;
+        }
+        
+        .performance-slider:before, .thinking-slider:before {
+            position: absolute;
+            content: "";
+            height: 16px;
+            width: 16px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        
+        input:checked + .performance-slider {
+            background-color: #10b981;
+        }
+        
+        input:checked + .thinking-slider {
+            background-color: #3b82f6;
+        }
+        
+        input:focus + .performance-slider {
+            box-shadow: 0 0 1px #10b981;
+        }
+        
+        input:focus + .thinking-slider {
+            box-shadow: 0 0 1px #3b82f6;
+        }
+        
+        input:checked + .performance-slider:before, input:checked + .thinking-slider:before {
+            transform: translateX(24px);
+        }
+    </style>
+</head>
+<body class="bg-gray-100 font-sans dark:bg-gray-900">
+    <!-- Hidden iframe to help with auth -->
+    <iframe id="pre-auth-frame" src="about:blank"></iframe>
+
+    <!-- Chat history panel -->
+    <div id="history-panel" class="history-panel">
+        <div class="bg-gradient-to-r from-purple-600 to-indigo-600 text-white p-4 flex justify-between items-center">
+            <h2 class="font-bold">Chat History</h2>
+            <button id="close-history-btn" class="text-white hover:text-gray-200" aria-label="Close history panel" title="Close panel (Esc)">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="p-2 bg-gray-100 border-b border-gray-200 dark:bg-gray-800 dark:border-gray-700">
+            <button id="new-chat-btn" class="w-full bg-white hover:bg-gray-50 text-purple-600 border border-purple-300 rounded-md py-2 px-4 flex items-center justify-center gap-2 transition-colors dark:bg-gray-700 dark:hover:bg-gray-600 dark:border-purple-500" title="Start a new chat (Ctrl/Cmd+N)">
+                <i class="fas fa-plus"></i>
+                <span>New Chat</span>
+            </button>
+        </div>
+        <div id="history-list" class="history-list dark:bg-gray-800">
+            <!-- Chat history items will be added here dynamically -->
+        </div>
+        <div class="p-3 border-t border-gray-200 bg-gray-50 dark:bg-gray-800 dark:border-gray-700">
+            <button id="clear-history-btn" class="w-full text-red-600 hover:bg-red-50 rounded-md py-2 flex items-center justify-center gap-2 transition-colors dark:hover:bg-red-900 dark:hover:bg-opacity-20">
+                <i class="fas fa-trash-alt"></i>
+                <span>Clear All History</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Popup blocker helper overlay -->
+    <div id="popup-helper" class="popup-helper">
+        <div class="popup-indicator"></div>
+        <div class="popup-helper-content dark:bg-gray-800 dark:text-white">
+            <h2 class="text-xl font-bold mb-2">Pop-up Blocker Detected</h2>
+            <p class="mb-4">Look in your browser's address bar for a popup blocker icon:</p>
+            <div id="browser-specific-image" class="text-center"></div>
+            <p class="mb-4">Click the icon and select "Allow pop-ups" for this site.</p>
+            <div class="flex space-x-2 justify-center">
+                <button id="close-popup-helper" class="bg-blue-600 text-white px-5 py-2 rounded-lg hover:bg-blue-700 transition-colors">
+                    Got it
+                </button>
+                <a href="chrome://settings/content/popups" target="_blank" class="chrome-settings bg-gray-600 text-white px-5 py-2 rounded-lg hover:bg-gray-700 transition-colors" style="display: none;">
+                    Open Settings
+                </a>
+                <a href="about:preferences#privacy" target="_blank" class="firefox-settings bg-gray-600 text-white px-5 py-2 rounded-lg hover:bg-gray-700 transition-colors" style="display: none;">
+                    Open Settings
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="container mx-auto px-4 py-8 max-w-4xl">
+        <!-- User Consent Banner -->
+        <div id="consent-banner" class="bg-blue-50 border-l-4 border-blue-500 p-4 mb-4 rounded-md shadow dark:bg-blue-900 dark:bg-opacity-30 dark:border-blue-400">
+            <div class="flex items-start">
+                <div class="flex-shrink-0 pt-0.5">
+                    <i class="fas fa-info-circle text-blue-500"></i>
+                </div>
+                <div class="ml-3">
+                    <h3 class="text-sm font-medium text-blue-800 dark:text-blue-300">Important Information</h3>
+                    <div class="mt-1 text-sm text-blue-700 dark:text-blue-200">
+                        <p>This chatbot uses Puter.js with a "User Pays" model. When you use this application:</p>
+                        <ul class="list-disc ml-5 mt-1">
+                            <li><strong>You MUST allow pop-ups</strong> for this site to work</li>
+                            <li>You will see a consent dialog from Puter.js</li>
+                            <li>You'll need to agree to cover your own usage costs</li>
+                            <li>Choose from Google Gemini, OpenAI, Claude, or DeepSeek models</li>
+                            <li>DALL-E 3 allows image generation from text prompts</li>
+                            <li>GPT-4o Vision can analyze images you upload</li>
+                        </ul>
+                    </div>
+                    <div class="mt-2 flex space-x-3">
+                        <button id="dismiss-consent" class="text-sm text-blue-500 font-medium hover:text-blue-600 dark:text-blue-300 dark:hover:text-blue-200">
+                            I understand
+                        </button>
+                        <button id="check-popup-settings" class="text-sm text-purple-500 font-medium hover:text-purple-600 dark:text-purple-300 dark:hover:text-purple-200">
+                            Check if popups are blocked
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-lg overflow-hidden dark:bg-gray-800">
+            <div class="p-4 bg-gradient-to-r from-purple-600 to-indigo-600 text-white flex items-center justify-between">
+                <div class="flex items-center">
+                    <i class="fas fa-robot text-2xl mr-3"></i>
+                    <h1 class="text-xl font-bold">AI Chat</h1>
+                </div>
+                <div class="flex items-center gap-2">
+                    <!-- Dark mode toggle -->
+                    <button id="dark-mode-toggle" class="bg-white bg-opacity-20 rounded p-2 hover:bg-opacity-30 transition-colors" aria-label="Toggle dark mode" title="Toggle dark mode">
+                        <i class="fas fa-moon"></i>
+                    </button>
+                    
+                    <!-- Performance mode toggle -->
+                    <div class="relative flex items-center mr-2" title="Performance mode prioritizes faster responses">
+                        <span class="text-xs mr-2 whitespace-nowrap">Speed mode</span>
+                        <label class="performance-toggle" for="performance-mode">
+                            <input type="checkbox" id="performance-mode" aria-label="Toggle performance mode" title="Enable speed mode for faster responses">
+                            <span class="performance-slider"></span>
+                        </label>
+                    </div>
+                    
+                    <!-- Thinking mode toggle -->
+                    <div class="relative flex items-center mr-2 group" title="Thinking mode provides step-by-step reasoning, deeper analysis and comprehensive responses">
+                        <span class="text-xs mr-2 whitespace-nowrap font-medium"><i class="fas fa-brain mr-1"></i>Thinking Mode</span>
+                        <label class="thinking-toggle" for="thinking-mode">
+                            <input type="checkbox" id="thinking-mode" aria-label="Toggle thinking mode" title="Enable thinking mode for structured reasoning and comprehensive analysis">
+                            <span class="thinking-slider"></span>
+                        </label>
+                        <div class="absolute bottom-full left-0 mb-2 hidden group-hover:block w-56 bg-gray-800 text-white text-xs p-2 rounded shadow-lg z-10 dark:bg-gray-700">
+                            Provides step-by-step reasoning and structured analysis. Ideal for complex questions or when you need detailed explanations.
+                        </div>
+                    </div>
+                    
+                    <button id="history-btn" class="bg-white bg-opacity-20 rounded p-2 hover:bg-opacity-30 transition-colors" aria-label="View chat history" title="Chat history (Ctrl/Cmd+H)">
+                        <i class="fas fa-history"></i>
+                    </button>
+                    <select id="model-selector" class="bg-white bg-opacity-20 text-white border-0 rounded p-1" aria-label="Select AI model">
+                        <optgroup label="Google Models">
+                            <option value="gemini-2.0-flash">Gemini 2.0 Flash - Fast & Efficient</option>
+                            <option value="gemini-1.5-flash">Gemini 1.5 Flash - Balanced Performance</option>
+                        </optgroup>
+                        <optgroup label="OpenAI Models">
+                            <option value="gpt-4o">GPT-4o - Latest & Versatile</option>
+                            <option value="gpt-4o-vision">GPT-4o Vision - Image Analysis</option>
+                            <option value="dall-e-3">DALL-E 3 - Image Generation</option>
+                        </optgroup>
+                        <optgroup label="Claude Models">
+                            <option value="claude-3-5-sonnet">Claude 3.5 Sonnet - Latest & Fastest</option>
+                            <option value="claude-3-opus">Claude 3 Opus - Most Powerful</option>
+                            <option value="claude-3-sonnet">Claude 3 Sonnet - Balanced</option>
+                            <option value="claude-3-haiku">Claude 3 Haiku - Efficient</option>
+                        </optgroup>
+                        <optgroup label="DeepSeek Models">
+                            <option value="deepseek-chat">DeepSeek Chat - General Purpose</option>
+                            <option value="deepseek-reasoner">DeepSeek Reasoner - Problem Solving</option>
+                        </optgroup>
+                    </select>
+                </div>
+            </div>
+            
+            <div id="chat-container" class="chat-container p-4 bg-gray-50 dark:bg-gray-900">
+                <div class="flex flex-col space-y-4">
+                    <!-- System welcome message -->
+                    <div class="flex items-start">
+                        <div class="flex-shrink-0 bg-gradient-to-r from-purple-600 to-indigo-600 rounded-full p-2 mr-3">
+                            <i class="fas fa-robot text-white"></i>
+                        </div>
+                        <div class="bg-gray-200 rounded-lg p-3 max-w-3xl dark:bg-gray-700">
+                            <p class="text-gray-800 dark:text-gray-100">Hello! I'm ready to assist you today. Choose a model from the dropdown above and start chatting!</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="border-t border-gray-200 p-4 bg-white dark:bg-gray-800 dark:border-gray-700">
+                <form id="chat-form" class="flex flex-col space-y-3">
+                    <div class="flex space-x-2">
+                        <textarea 
+                            id="user-input" 
+                            class="flex-1 border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                            placeholder="Type your message here..."
+                            autocomplete="off"
+                            rows="1"
+                        ></textarea>
+                        <button 
+                            type="submit" 
+                            class="bg-gradient-to-r from-purple-600 to-indigo-600 text-white px-4 py-2 rounded-lg hover:opacity-90 transition-opacity flex items-center"
+                            title="Send message (Ctrl/Cmd+Enter)"
+                        >
+                            <span>Send</span>
+                            <i class="fas fa-paper-plane ml-2"></i>
+                        </button>
+                    </div>
+                    <div id="image-upload-container" class="flex items-center space-x-2" style="display: none;">
+                        <button 
+                            type="button" 
+                            id="image-upload-btn" 
+                            class="bg-gray-200 text-gray-700 px-3 py-1 rounded-lg hover:bg-gray-300 transition-colors flex items-center dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
+                            aria-label="Upload image"
+                            title="Upload an image for analysis"
+                        >
+                            <i class="fas fa-image mr-2"></i>
+                            <span>Upload Image</span>
+                        </button>
+                        <div id="image-preview-container" class="hidden flex-1">
+                            <div class="relative inline-block">
+                                <img id="image-preview" class="h-12 rounded-md object-cover" alt="Preview">
+                                <button 
+                                    type="button" 
+                                    id="remove-image-btn" 
+                                    class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center hover:bg-red-600"
+                                    aria-label="Remove image"
+                                    title="Remove image"
+                                >
+                                    <i class="fas fa-times text-xs"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <input type="file" id="image-upload-input" accept="image/*" class="hidden">
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <div class="flex justify-between items-center mt-4 text-gray-500 text-sm">
+            <p>Using Gemini, Claude, DeepSeek, GPT-4o, and DALL-E models via Puter.js - No API keys required</p>
+            <div class="flex items-center gap-2">
+                <span id="usage-counter" class="text-xs bg-gray-200 px-2 py-1 rounded dark:bg-gray-700">Requests: 0</span>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html> 
