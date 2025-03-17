@@ -1,0 +1,1949 @@
+<!DOCTYPE html>
+<html lang="en" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Chat - Powered by Puter.js</title>
+    <meta name="description" content="AI chat application powered by various AI models including Gemini, Claude, GPT-4o, and DALL-E">
+    <meta name="theme-color" content="#7c3aed">
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="icons/icon-192x192.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="icons/favicon-16x16.png">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://js.puter.com/v2/"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Prism.js for syntax highlighting -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/line-numbers/prism-line-numbers.min.css">
+    <!-- KaTeX for LaTeX rendering -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            50: '#f5f3ff',
+                            100: '#ede9fe',
+                            200: '#ddd6fe',
+                            300: '#c4b5fd',
+                            400: '#a78bfa',
+                            500: '#8b5cf6',
+                            600: '#7c3aed',
+                            700: '#6d28d9',
+                            800: '#5b21b6',
+                            900: '#4c1d95',
+                        }
+                    },
+                    animation: {
+                        'pulse-fast': 'pulse 1s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'bounce-slow': 'bounce 3s infinite',
+                        'slide-up': 'slideUp 0.3s ease forwards',
+                        'slide-down': 'slideDown 0.3s ease forwards',
+                        'fade-in': 'fadeIn 0.3s ease forwards',
+                        'scale-in': 'scaleIn 0.2s ease forwards',
+                        'float': 'float 6s ease-in-out infinite',
+                        'shimmer': 'shimmer 2s linear infinite',
+                        'glow': 'glow 2s ease-in-out infinite alternate'
+                    },
+                    keyframes: {
+                        slideUp: {
+                            '0%': { transform: 'translateY(10px)', opacity: 0 },
+                            '100%': { transform: 'translateY(0)', opacity: 1 }
+                        },
+                        slideDown: {
+                            '0%': { transform: 'translateY(-10px)', opacity: 0 },
+                            '100%': { transform: 'translateY(0)', opacity: 1 }
+                        },
+                        fadeIn: {
+                            '0%': { opacity: 0 },
+                            '100%': { opacity: 1 }
+                        },
+                        scaleIn: {
+                            '0%': { transform: 'scale(0.95)', opacity: 0 },
+                            '100%': { transform: 'scale(1)', opacity: 1 }
+                        },
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0)' },
+                            '50%': { transform: 'translateY(-10px)' }
+                        },
+                        shimmer: {
+                            '0%': { backgroundPosition: '-200% 0' },
+                            '100%': { backgroundPosition: '200% 0' }
+                        },
+                        glow: {
+                            '0%': { boxShadow: '0 0 5px rgba(124, 58, 237, 0.5)' },
+                            '100%': { boxShadow: '0 0 20px rgba(124, 58, 237, 0.8)' }
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Base UI improvements */
+        :root {
+            --chat-radius: 18px;
+            --animation-timing: cubic-bezier(0.4, 0, 0.2, 1);
+            --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+        
+        html.dark {
+            --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.2);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.2), 0 2px 4px -1px rgba(0, 0, 0, 0.12);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -2px rgba(0, 0, 0, 0.2);
+        }
+        
+        body {
+            scrollbar-width: thin;
+            scroll-behavior: smooth;
+            transition: background-color 0.3s var(--animation-timing);
+        }
+        
+        /* Improved chat container */
+        .chat-container {
+            height: calc(100vh - 230px);
+            overflow-y: auto;
+            scrollbar-width: thin;
+            scroll-behavior: smooth;
+            mask-image: linear-gradient(to top, transparent, black 20px, black calc(100% - 20px), transparent);
+            -webkit-mask-image: linear-gradient(to top, transparent, black 20px, black calc(100% - 20px), transparent);
+            transition: all 0.3s var(--animation-timing);
+            padding: 1rem 1rem 2rem 1rem !important;
+        }
+        
+        .chat-container::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        .chat-container::-webkit-scrollbar-thumb {
+            background-color: rgba(156, 163, 175, 0.5);
+            border-radius: 3px;
+        }
+        
+        /* Enhanced message bubbles */
+        .user-message {
+            position: relative;
+            background-image: linear-gradient(135deg, #8b5cf6, #6d28d9);
+            color: white;
+            border-radius: var(--chat-radius) var(--chat-radius) 4px var(--chat-radius);
+            box-shadow: var(--shadow-md);
+            transform-origin: bottom right;
+            animation: scaleIn 0.2s ease forwards;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .user-message::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            right: -8px;
+            width: 16px;
+            height: 16px;
+            background-image: linear-gradient(45deg, transparent 50%, #6d28d9 50%);
+            transform: rotate(45deg);
+            border-radius: 0 0 0 4px;
+            z-index: -1;
+        }
+        
+        .assistant-message {
+            position: relative;
+            border-radius: var(--chat-radius) var(--chat-radius) var(--chat-radius) 4px;
+            box-shadow: var(--shadow-sm);
+            transform-origin: bottom left;
+            animation: scaleIn 0.3s ease forwards;
+            transition: box-shadow 0.3s var(--animation-timing);
+        }
+        
+        html.dark .assistant-message {
+            box-shadow: var(--shadow-md);
+            background-color: #374151;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        
+        .assistant-message::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: -8px;
+            width: 16px;
+            height: 16px;
+            background: inherit;
+            transform: rotate(45deg);
+            border-radius: 0 0 4px 0;
+            z-index: -1;
+        }
+        
+        /* Improved typing indicator */
+        .typing-indicator {
+            display: inline-flex;
+            align-items: center;
+            padding: 8px 12px;
+            background-color: rgba(156, 163, 175, 0.2);
+            border-radius: 12px;
+            margin: 4px 0;
+        }
+        
+        .typing-indicator span {
+            height: 8px;
+            width: 8px;
+            margin: 0 2px;
+            background: linear-gradient(to bottom, #9ca3af, #6b7280);
+            border-radius: 50%;
+            display: inline-block;
+            opacity: 0.8;
+            animation: bounce 1.5s infinite ease-in-out;
+        }
+        
+        html.dark .typing-indicator span {
+            background: linear-gradient(to bottom, #6b7280, #4b5563);
+        }
+        
+        .typing-indicator span:nth-child(1) {
+            animation-delay: 0s;
+        }
+        
+        .typing-indicator span:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+        
+        .typing-indicator span:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+        
+        /* Optimized loading animation */
+        @keyframes shimmer {
+            0% {
+                background-position: -200px 0;
+            }
+            100% {
+                background-position: 200px 0;
+            }
+        }
+        
+        .loading-shimmer {
+            background: linear-gradient(90deg, rgba(0,0,0,0.03) 0%, rgba(0,0,0,0.08) 35%, rgba(0,0,0,0.03) 70%);
+            background-size: 600px 100%;
+            animation: shimmer 1.5s infinite linear;
+            border-radius: 8px;
+        }
+        
+        html.dark .loading-shimmer {
+            background: linear-gradient(90deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.08) 35%, rgba(255,255,255,0.05) 70%);
+            background-size: 600px 100%;
+        }
+        
+        /* Enhanced input field */
+        #user-input {
+            transition: all 0.2s var(--animation-timing);
+            min-height: 48px;
+            max-height: 150px;
+            resize: none;
+            overflow-y: auto;
+            padding: 14px 48px 14px 16px; /* Add space for the send button */
+            line-height: 1.5;
+            border-radius: 24px;
+            box-shadow: var(--shadow-sm);
+        }
+        
+        #user-input:focus {
+            box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.2);
+            border-color: #7c3aed;
+        }
+        
+        html.dark #user-input {
+            background-color: #1f2937;
+            border-color: #374151;
+        }
+        
+        html.dark #user-input:focus {
+            box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.4);
+            border-color: #8b5cf6;
+        }
+        
+        /* Enhanced send button */
+        #send-button {
+            position: absolute;
+            right: 8px;
+            bottom: 8px;
+            height: 36px;
+            width: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s var(--animation-timing);
+            box-shadow: var(--shadow-sm);
+            background-size: 200% auto;
+            animation: shimmerGradient 3s linear infinite;
+        }
+        
+        @keyframes shimmerGradient {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        
+        #send-button:hover {
+            transform: scale(1.05);
+            box-shadow: var(--shadow-md);
+        }
+        
+        #send-button:active {
+            transform: scale(0.95);
+        }
+        
+        /* History panel enhancements */
+        .history-panel {
+            position: fixed;
+            top: 0;
+            left: -320px;
+            width: 320px;
+            height: 100vh;
+            background-color: white;
+            box-shadow: var(--shadow-lg);
+            z-index: 100;
+            transition: left 0.3s var(--animation-timing);
+            display: flex;
+            flex-direction: column;
+            border-right: 1px solid rgba(0, 0, 0, 0.1);
+        }
+        
+        html.dark .history-panel {
+            background-color: #1f2937;
+            border-right: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        
+        .history-panel.active {
+            left: 0;
+        }
+        
+        /* Improved history items */
+        .history-item {
+            transition: all 0.2s var(--animation-timing);
+            border-left: 3px solid transparent;
+            margin: 4px 0;
+            border-radius: 0 8px 8px 0;
+        }
+        
+        .history-item:hover {
+            background-color: rgba(124, 58, 237, 0.1);
+            border-left-color: #8b5cf6;
+            transform: translateX(2px);
+        }
+        
+        html.dark .history-item:hover {
+            background-color: rgba(124, 58, 237, 0.2);
+        }
+        
+        .history-item.active {
+            background-color: rgba(124, 58, 237, 0.15);
+            border-left-color: #7c3aed;
+        }
+        
+        html.dark .history-item.active {
+            background-color: rgba(124, 58, 237, 0.25);
+        }
+        
+        /* Card UI enhancements */
+        .bg-white {
+            box-shadow: var(--shadow-md);
+            border-radius: 16px;
+            overflow: hidden;
+        }
+        
+        .bg-gradient-to-r {
+            background-size: 200% auto;
+            animation: gradientShift 15s ease infinite;
+        }
+        
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        
+        /* Quick action buttons */
+        #quick-actions button {
+            transition: all 0.2s var(--animation-timing);
+            border-radius: 12px;
+            box-shadow: var(--shadow-sm);
+            border: 1px solid transparent;
+        }
+        
+        #quick-actions button:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+        
+        #quick-actions button:active {
+            transform: translateY(0);
+        }
+        
+        /* Model selector enhancements */
+        #model-selector {
+            border-radius: 12px;
+            transition: all 0.2s var(--animation-timing);
+            background-color: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+        }
+        
+        #model-selector:focus {
+            box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.3);
+        }
+        
+        /* Consent banner enhancements */
+        #consent-banner {
+            border-radius: 12px;
+            box-shadow: var(--shadow-md);
+            animation: slideDown 0.5s var(--animation-timing);
+        }
+        
+        #dismiss-consent, #check-popup-settings {
+            transition: all 0.2s var(--animation-timing);
+            padding: 4px 10px;
+            border-radius: 8px;
+        }
+        
+        #dismiss-consent:hover, #check-popup-settings:hover {
+            background-color: rgba(124, 58, 237, 0.1);
+        }
+        
+        html.dark #dismiss-consent:hover, 
+        html.dark #check-popup-settings:hover {
+            background-color: rgba(124, 58, 237, 0.2);
+        }
+        
+        /* Scroll to bottom button enhancements */
+        .scroll-to-bottom {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #8b5cf6, #6d28d9);
+            color: white;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: var(--shadow-md);
+            z-index: 10;
+            opacity: 0.8;
+            transition: all 0.2s var(--animation-timing);
+            animation: float 6s ease-in-out infinite;
+        }
+        
+        .scroll-to-bottom:hover {
+            opacity: 1;
+            transform: translateY(-3px);
+            box-shadow: var(--shadow-lg);
+        }
+        
+        /* Toggle switches enhancements */
+        .performance-toggle input:checked + .performance-slider,
+        .thinking-toggle input:checked + .thinking-slider,
+        .technical-toggle input:checked + .technical-slider {
+            box-shadow: 0 0 8px rgba(16, 185, 129, 0.5);
+        }
+        
+        .performance-slider, .thinking-slider, .technical-slider {
+            transition: 0.4s var(--animation-timing);
+        }
+        
+        /* Mobile experience improvements */
+        @media (max-width: 640px) {
+            .chat-container {
+                height: calc(100vh - 200px);
+                padding: 0.5rem 0.5rem 1.5rem 0.5rem !important;
+            }
+            
+            #user-input {
+                min-height: 44px;
+                padding: 12px 44px 12px 12px;
+            }
+            
+            .history-panel {
+                width: 280px;
+            }
+            
+            /* Floating action button for mobile */
+            #mobile-fab {
+                position: fixed;
+                bottom: 20px;
+                right: 20px;
+                width: 50px;
+                height: 50px;
+                background: linear-gradient(135deg, #8b5cf6, #6d28d9);
+                color: white;
+                border-radius: 50%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                box-shadow: var(--shadow-lg);
+                z-index: 30;
+                transition: all 0.2s var(--animation-timing);
+            }
+            
+            #mobile-fab:active {
+                transform: scale(0.95);
+            }
+        }
+        
+        /* Code block enhancements */
+        pre[class*="language-"] {
+            border-radius: 10px !important;
+            margin: 1rem 0;
+            box-shadow: var(--shadow-md);
+            transition: all 0.2s var(--animation-timing);
+            border: 1px solid rgba(0, 0, 0, 0.05);
+        }
+        
+        pre[class*="language-"]:hover {
+            box-shadow: var(--shadow-lg);
+        }
+        
+        html.dark pre[class*="language-"] {
+            box-shadow: var(--shadow-md);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        
+        pre[class*="language-"]::before {
+            border-radius: 8px 8px 0 0;
+            background: linear-gradient(90deg, #7c3aed, #6d28d9);
+            padding: 0.3rem 1rem;
+            font-family: system-ui, -apple-system, sans-serif;
+        }
+        
+        /* Improved tooltips */
+        .tooltip .tooltip-text {
+            box-shadow: var(--shadow-md);
+            border-radius: 8px;
+            padding: 8px 12px;
+            transition: all 0.2s var(--animation-timing);
+            border: 1px solid rgba(0, 0, 0, 0.1);
+        }
+        
+        html.dark .tooltip .tooltip-text {
+            background-color: #1f2937;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .tooltip:hover .tooltip-text {
+            transform: translateX(-50%) translateY(-5px);
+        }
+        
+        /* Chat container message transitions */
+        .chat-container .flex-col > div {
+            transition: all 0.3s var(--animation-timing);
+            animation: fadeInUp 0.5s forwards;
+        }
+        
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Rest of existing CSS */
+        .chat-container {
+            height: calc(100vh - 230px);
+            overflow-y: auto;
+            scrollbar-width: thin;
+            scroll-behavior: smooth; /* Smooth scrolling for better UX */
+            mask-image: linear-gradient(to top, transparent, black 20px, black calc(100% - 20px), transparent);
+            -webkit-mask-image: linear-gradient(to top, transparent, black 20px, black calc(100% - 20px), transparent);
+        }
+        .chat-container::-webkit-scrollbar {
+            width: 6px;
+        }
+        .chat-container::-webkit-scrollbar-thumb {
+            background-color: rgba(156, 163, 175, 0.5);
+            border-radius: 3px;
+        }
+        .typing-indicator {
+            display: inline-flex;
+            align-items: center;
+        }
+        .typing-indicator span {
+            height: 8px;
+            width: 8px;
+            margin: 0 1px;
+            background-color: #9ca3af;
+            border-radius: 50%;
+            display: inline-block;
+            animation: bounce 1.5s infinite ease-in-out;
+        }
+        
+        html.dark .typing-indicator span {
+            background-color: #6b7280;
+        }
+        
+        .typing-indicator span:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+        .typing-indicator span:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+        @keyframes bounce {
+            0%, 60%, 100% {
+                transform: translateY(0);
+            }
+            30% {
+                transform: translateY(-4px);
+            }
+        }
+        
+        /* Optimized loading animation */
+        @keyframes shimmer {
+            0% {
+                background-position: -200px 0;
+            }
+            100% {
+                background-position: 200px 0;
+            }
+        }
+        
+        .loading-shimmer {
+            background: linear-gradient(to right, rgba(0,0,0,0.05) 0%, rgba(0,0,0,0.1) 20%, rgba(0,0,0,0.05) 40%);
+            background-size: 600px 100%;
+            animation: shimmer 1.5s infinite linear;
+        }
+        
+        html.dark .loading-shimmer {
+            background: linear-gradient(to right, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.1) 20%, rgba(255,255,255,0.05) 40%);
+            background-size: 600px 100%;
+        }
+        
+        /* Popup helper visualization */
+        .popup-helper {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+            cursor: pointer;
+        }
+        .popup-helper.active {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+        }
+        .popup-helper-content {
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            max-width: 500px;
+            margin-top: 50px;
+            text-align: center;
+        }
+        
+        html.dark .popup-helper-content {
+            background-color: #1f2937;
+            color: white;
+        }
+        
+        .popup-indicator {
+            position: absolute;
+            top: 15px;
+            right: 30px;
+            width: 100px;
+            height: 50px;
+            border: 3px solid #fbbf24;
+            border-radius: 5px;
+            animation: pulse 1.5s infinite;
+        }
+        .browser-img {
+            max-width: 100%;
+            height: auto;
+            border: 1px solid #e5e7eb;
+            border-radius: 5px;
+            margin: 15px 0;
+        }
+        
+        html.dark .browser-img {
+            border-color: #4b5563;
+        }
+        
+        @keyframes pulse {
+            0%, 100% {
+                box-shadow: 0 0 0 0 rgba(251, 191, 36, 0.7);
+            }
+            50% {
+                box-shadow: 0 0 0 10px rgba(251, 191, 36, 0);
+            }
+        }
+        /* Pre-auth frame */
+        #pre-auth-frame {
+            width: 1px;
+            height: 1px;
+            position: absolute;
+            left: -100px;
+            top: -100px;
+            opacity: 0.01;
+            pointer-events: none;
+            overflow: hidden;
+        }
+        /* History panel */
+        .history-panel {
+            position: fixed;
+            top: 0;
+            left: -320px;
+            width: 320px;
+            height: 100vh;
+            background-color: white;
+            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+            z-index: 100;
+            transition: left 0.3s ease;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        html.dark .history-panel {
+            background-color: #1f2937;
+            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.3);
+        }
+        
+        .history-panel.active {
+            left: 0;
+        }
+        .history-list {
+            flex: 1;
+            overflow-y: auto;
+            scrollbar-width: thin;
+        }
+        .history-list::-webkit-scrollbar {
+            width: 4px;
+        }
+        .history-list::-webkit-scrollbar-thumb {
+            background-color: rgba(156, 163, 175, 0.5);
+            border-radius: 2px;
+        }
+        /* Model selector styling */
+        #model-selector {
+            min-width: 200px;
+        }
+        #model-selector optgroup {
+            font-weight: bold;
+            background-color: rgba(0, 0, 0, 0.1);
+        }
+        
+        html.dark #model-selector optgroup {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+        
+        #model-selector option {
+            padding: 5px;
+            background-color: #4b3f72;
+        }
+        
+        /* New styles for improved UI/UX */
+        /* Message transitions */
+        .chat-container .flex-col > div {
+            transition: opacity 0.3s, transform 0.3s;
+            animation: messageAppear 0.3s forwards;
+        }
+        @keyframes messageAppear {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        /* Input field styling */
+        #user-input {
+            transition: all 0.2s ease;
+            min-height: 42px;
+            max-height: 150px;
+            resize: none;
+            overflow-y: hidden;
+        }
+        #user-input:focus {
+            box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.2);
+        }
+        
+        html.dark #user-input:focus {
+            box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.4);
+        }
+        
+        /* Model selection highlighting */
+        .model-tag {
+            display: inline-block;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            margin-right: 4px;
+            background-color: rgba(124, 58, 237, 0.1);
+            color: #7c3aed;
+        }
+        
+        html.dark .model-tag {
+            background-color: rgba(124, 58, 237, 0.2);
+        }
+        
+        /* Response time badge */
+        .response-time {
+            display: inline-flex;
+            align-items: center;
+            font-size: 0.7rem;
+            color: #6b7280;
+            background-color: #f3f4f6;
+            padding: 2px 6px;
+            border-radius: 4px;
+            margin-top: 4px;
+        }
+        
+        html.dark .response-time {
+            background-color: #374151;
+            color: #9ca3af;
+        }
+        
+        /* Button hover effects */
+        button {
+            transition: all 0.2s ease;
+        }
+        
+        /* High contrast focus styles for accessibility */
+        button:focus, 
+        select:focus, 
+        input:focus,
+        textarea:focus {
+            outline: 2px solid #7c3aed;
+            outline-offset: 2px;
+        }
+        
+        /* Better mobile support */
+        @media (max-width: 640px) { /* Mobile */
+            .chat-container {
+                height: calc(100vh - 200px);
+            }
+
+.history-panel {
+    width: 280px;
+}
+
+            #model-selector {
+                min-width: 150px;
+            }
+        }
+
+        @media (min-width: 641px) and (max-width: 1024px) { /* Tablet */
+            .chat-container {
+                height: calc(100vh - 220px);
+            }
+
+            .history-panel {
+                width: 300px;
+            }
+
+            #model-selector {
+                min-width: 180px;
+            }
+        }
+
+        @media (min-width: 1025px) { /* Desktop */
+            .chat-container {
+                height: calc(100vh - 230px);
+            }
+
+            .history-panel {
+                width: 320px;
+            }
+
+            #model-selector {
+                min-width: 200px;
+            }
+        }
+
+        /* Dark mode styles */
+        html.dark body {
+            background-color: #111827;
+            color: #f3f4f6;
+        }
+        
+        html.dark .bg-white {
+            background-color: #1f2937;
+        }
+        
+        html.dark .bg-gray-50 {
+            background-color: #111827;
+        }
+        
+        html.dark .bg-gray-100 {
+            background-color: #1f2937;
+        }
+        
+        html.dark .bg-gray-200 {
+            background-color: #374151;
+        }
+        
+        html.dark .text-gray-500 {
+            color: #9ca3af;
+        }
+        
+        html.dark .text-gray-600 {
+            color: #d1d5db;
+        }
+        
+        html.dark .text-gray-700 {
+            color: #e5e7eb;
+        }
+        
+        html.dark .text-gray-800 {
+            color: #f3f4f6;
+        }
+        
+        html.dark .border-gray-200 {
+            border-color: #374151;
+        }
+        
+        html.dark .border-gray-300 {
+            border-color: #4b5563;
+        }
+        
+        /* Speed meter styling */
+        .speed-meter {
+            height: 4px;
+            background-color: #e5e7eb;
+            border-radius: 2px;
+            overflow: hidden;
+            margin: 8px 0;
+        }
+        
+        html.dark .speed-meter {
+            background-color: #4b5563;
+        }
+        
+        .speed-meter-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #34d399 0%, #fbbf24 50%, #ef4444 100%);
+            border-radius: 2px;
+            transition: width 0.3s ease;
+        }
+        
+        /* Performance mode styles */
+        .performance-toggle, .thinking-toggle {
+            position: relative;
+            display: inline-block;
+            width: 48px;
+            height: 24px;
+        }
+        
+        .performance-toggle input, .thinking-toggle input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        
+        .performance-slider, .thinking-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 24px;
+        }
+        
+        .performance-slider:before, .thinking-slider:before {
+            position: absolute;
+            content: "";
+            height: 16px;
+            width: 16px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        
+        input:checked + .performance-slider {
+            background-color: #10b981;
+        }
+        
+        input:checked + .thinking-slider {
+            background-color: #3b82f6;
+        }
+        
+        input:focus + .performance-slider {
+            box-shadow: 0 0 1px #10b981;
+        }
+        
+        input:focus + .thinking-slider {
+            box-shadow: 0 0 1px #3b82f6;
+        }
+        
+        input:checked + .performance-slider:before, input:checked + .thinking-slider:before {
+            transform: translateX(24px);
+        }
+        
+        /* Add gradient mask to chat container */
+        .chat-container {
+            mask-image: linear-gradient(to top, transparent, black 20px, black calc(100% - 20px), transparent);
+            -webkit-mask-image: linear-gradient(to top, transparent, black 20px, black calc(100% - 20px), transparent);
+        }
+        
+        /* Improve message bubbles */
+        .user-message {
+            position: relative;
+            background-image: linear-gradient(135deg, #8b5cf6, #6d28d9);
+            color: white;
+            border-radius: 18px 18px 4px 18px;
+            box-shadow: 0 4px 6px rgba(124, 58, 237, 0.1);
+            transform-origin: bottom right;
+            animation: scaleIn 0.2s ease forwards;
+        }
+        
+        .assistant-message {
+            position: relative;
+            border-radius: 18px 18px 18px 4px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            transform-origin: bottom left;
+            animation: scaleIn 0.3s ease forwards;
+        }
+        
+        html.dark .assistant-message {
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+        }
+        
+        /* Send button positioning */
+        .send-button-container {
+            position: relative;
+        }
+        
+        #send-button {
+            position: absolute;
+            right: 8px;
+            bottom: 8px;
+            height: 36px;
+            width: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+        
+        /* Improved history item hover effects */
+        .history-item {
+            transition: all 0.2s ease;
+            border-left: 3px solid transparent;
+        }
+        
+        .history-item:hover {
+            background-color: #f3f4f6;
+            border-left-color: #8b5cf6;
+        }
+        
+        html.dark .history-item:hover {
+            background-color: #374151;
+            border-left-color: #8b5cf6;
+        }
+        
+        .history-item.active {
+            background-color: #ede9fe;
+            border-left-color: #7c3aed;
+        }
+        
+        html.dark .history-item.active {
+            background-color: #312e81;
+            border-left-color: #7c3aed;
+        }
+        
+        /* Scroll to bottom button */
+        .scroll-to-bottom {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: #7c3aed;
+            color: white;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            z-index: 10;
+            opacity: 0.8;
+            transition: opacity 0.2s;
+        }
+        
+        .scroll-to-bottom:hover {
+            opacity: 1;
+        }
+        
+        /* Tooltip */
+        .tooltip {
+            position: relative;
+        }
+        
+        .tooltip .tooltip-text {
+            visibility: hidden;
+            background-color: #333;
+            color: #fff;
+            text-align: center;
+            border-radius: 6px;
+            padding: 5px 10px;
+            position: absolute;
+            z-index: 1;
+            bottom: 125%;
+            left: 50%;
+            transform: translateX(-50%);
+            opacity: 0;
+            transition: opacity 0.3s;
+            white-space: nowrap;
+            font-size: 0.75rem;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+        
+        .tooltip:hover .tooltip-text {
+            visibility: visible;
+            opacity: 1;
+        }
+        
+        /* Code block styling */
+        pre {
+            background-color: #f1f5f9;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            overflow-x: auto;
+            margin: 1rem 0;
+            border-left: 3px solid #7c3aed;
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+        }
+        
+        html.dark pre {
+            background-color: #1e293b;
+            border-left-color: #8b5cf6;
+        }
+        
+        code {
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            background-color: rgba(124, 58, 237, 0.1);
+            padding: 0.2rem 0.4rem;
+            border-radius: 0.25rem;
+        }
+        
+        html.dark code {
+            background-color: rgba(124, 58, 237, 0.2);
+        }
+        
+        /* Loading spinner */
+        .loading-spinner {
+            border: 3px solid rgba(255, 255, 255, 0.2);
+            border-top: 3px solid white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* Ripple effect for buttons */
+        .ripple {
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .ripple:after {
+            content: "";
+            display: block;
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            pointer-events: none;
+            background-image: radial-gradient(circle, #fff 10%, transparent 10.01%);
+            background-repeat: no-repeat;
+            background-position: 50%;
+            transform: scale(10, 10);
+            opacity: 0;
+            transition: transform .5s, opacity 1s;
+        }
+        
+        .ripple:active:after {
+            transform: scale(0, 0);
+            opacity: .3;
+            transition: 0s;
+        }
+        
+        /* Enhanced code block styling */
+        pre[class*="language-"] {
+            border-radius: 0.5rem;
+            margin: 1rem 0;
+            position: relative;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+            max-height: 500px;
+            overflow-y: auto;
+            padding-top: 2.5rem !important;
+        }
+        
+        html.dark pre[class*="language-"] {
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
+        }
+        
+        /* Language badge on code blocks */
+        pre[class*="language-"]::before {
+            content: attr(data-language);
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: #7c3aed;
+            color: white;
+            font-size: 0.7rem;
+            padding: 0.2rem 0.5rem;
+            text-transform: uppercase;
+            font-weight: bold;
+            border-top-left-radius: 0.5rem;
+            border-top-right-radius: 0.5rem;
+        }
+        
+        /* Code block actions */
+        .code-actions {
+            position: absolute;
+            top: 0;
+            right: 0;
+            display: flex;
+            z-index: 10;
+        }
+        
+        .code-action-button {
+            background: rgba(0, 0, 0, 0.3);
+            color: white;
+            border: none;
+            font-size: 0.7rem;
+            padding: 0.2rem 0.5rem;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        
+        .code-action-button:hover {
+            background: rgba(0, 0, 0, 0.5);
+        }
+        
+        /* Citation styling */
+        .citation {
+            border-left: 3px solid #7c3aed;
+            padding-left: 1rem;
+            margin: 1rem 0;
+            font-style: italic;
+            color: #4b5563;
+        }
+        
+        html.dark .citation {
+            color: #9ca3af;
+        }
+        
+        .citation-source {
+            font-size: 0.8rem;
+            color: #6b7280;
+            margin-top: 0.5rem;
+        }
+        
+        /* Technical mode toggle */
+        .technical-toggle {
+            position: relative;
+            display: inline-block;
+            width: 48px;
+            height: 24px;
+        }
+        
+        .technical-toggle input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        
+        .technical-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 24px;
+        }
+        
+        .technical-slider:before {
+            position: absolute;
+            content: "";
+            height: 16px;
+            width: 16px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        
+        input:checked + .technical-slider {
+            background-color: #2563eb;
+        }
+        
+        input:focus + .technical-slider {
+            box-shadow: 0 0 1px #2563eb;
+        }
+        
+        input:checked + .technical-slider:before {
+            transform: translateX(24px);
+        }
+        
+        /* Katex rendering fixes */
+        .katex-display {
+            overflow-x: auto;
+            overflow-y: hidden;
+            padding: 0.5rem 0;
+        }
+        
+        /* Split view for code and explanation */
+        .split-view {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            margin: 1rem 0;
+        }
+        
+        @media (min-width: 768px) {
+            .split-view {
+                flex-direction: row;
+            }
+            
+            .split-view-code {
+                flex: 1;
+                min-width: 0;
+            }
+            
+            .split-view-explanation {
+                flex: 1;
+                min-width: 0;
+            }
+        }
+        
+        .split-view-code,
+        .split-view-explanation {
+            border: 1px solid #e5e7eb;
+            border-radius: 0.5rem;
+            padding: 1rem;
+        }
+        
+        html.dark .split-view-code,
+        html.dark .split-view-explanation {
+            border-color: #374151;
+        }
+        
+        .split-view-title {
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        
+        html.dark .split-view-title {
+            border-color: #374151;
+        }
+        
+        /* Run code button styling */
+        .run-code-btn {
+            display: inline-flex;
+            align-items: center;
+            background-color: #059669;
+            color: white;
+            border: none;
+            border-radius: 0.25rem;
+            padding: 0.25rem 0.5rem;
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            margin-top: 0.5rem;
+        }
+        
+        .run-code-btn:hover {
+            background-color: #047857;
+        }
+        
+        .run-code-result {
+            background-color: #f3f4f6;
+            border-radius: 0.25rem;
+            padding: 0.5rem;
+            margin-top: 0.5rem;
+            font-family: monospace;
+            white-space: pre-wrap;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        
+        html.dark .run-code-result {
+            background-color: #1f2937;
+        }
+        
+        /* Table styling for data */
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1rem 0;
+            overflow-x: auto;
+            display: block;
+        }
+        
+        .data-table th,
+        .data-table td {
+            border: 1px solid #e5e7eb;
+            padding: 0.5rem;
+            text-align: left;
+        }
+        
+        .data-table th {
+            background-color: #f9fafb;
+            font-weight: bold;
+        }
+        
+        html.dark .data-table th {
+            background-color: #374151;
+        }
+        
+        html.dark .data-table th,
+        html.dark .data-table td {
+            border-color: #4b5563;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 font-sans dark:bg-gray-900">
+    <!-- Hidden iframe to help with auth -->
+    <iframe id="pre-auth-frame" src="about:blank"></iframe>
+
+    <!-- Chat history panel -->
+    <div id="history-panel" class="history-panel">
+        <div class="bg-gradient-to-r from-purple-600 to-indigo-600 text-white p-4 flex justify-between items-center">
+            <h2 class="font-bold">Chat History</h2>
+            <button id="close-history-btn" class="text-white hover:text-gray-200" aria-label="Close history panel" title="Close panel (Esc)">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="p-2 bg-gray-100 border-b border-gray-200 dark:bg-gray-800 dark:border-gray-700">
+            <button id="new-chat-btn" class="w-full bg-white hover:bg-gray-50 text-purple-600 border border-purple-300 rounded-md py-2 px-4 flex items-center justify-center gap-2 transition-colors dark:bg-gray-700 dark:hover:bg-gray-600 dark:border-purple-500" title="Start a new chat (Ctrl/Cmd+N)">
+                <i class="fas fa-plus"></i>
+                <span>New Chat</span>
+            </button>
+        </div>
+        <div id="history-list" class="history-list dark:bg-gray-800">
+            <!-- Chat history items will be added here dynamically -->
+        </div>
+        <div class="p-3 border-t border-gray-200 bg-gray-50 dark:bg-gray-800 dark:border-gray-700">
+            <button id="clear-history-btn" class="w-full text-red-600 hover:bg-red-50 rounded-md py-2 flex items-center justify-center gap-2 transition-colors dark:hover:bg-red-900 dark:hover:bg-opacity-20">
+                <i class="fas fa-trash-alt"></i>
+                <span>Clear All History</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Popup blocker helper overlay -->
+    <div id="popup-helper" class="popup-helper">
+        <div class="popup-indicator"></div>
+        <div class="popup-helper-content dark:bg-gray-800 dark:text-white">
+            <h2 class="text-xl font-bold mb-2">Pop-up Blocker Detected</h2>
+            <p class="mb-4">Look in your browser's address bar for a popup blocker icon:</p>
+            <div id="browser-specific-image" class="text-center"></div>
+            <p class="mb-4">Click the icon and select "Allow pop-ups" for this site.</p>
+            <div class="flex space-x-2 justify-center">
+                <button id="close-popup-helper" class="bg-blue-600 text-white px-5 py-2 rounded-lg hover:bg-blue-700 transition-colors">
+                    Got it
+                </button>
+                <a href="chrome://settings/content/popups" target="_blank" class="chrome-settings bg-gray-600 text-white px-5 py-2 rounded-lg hover:bg-gray-700 transition-colors" style="display: none;">
+                    Open Settings
+                </a>
+                <a href="about:preferences#privacy" target="_blank" class="firefox-settings bg-gray-600 text-white px-5 py-2 rounded-lg hover:bg-gray-700 transition-colors" style="display: none;">
+                    Open Settings
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Floating action button for mobile -->
+    <div id="mobile-fab" class="floating-action-button shadow-lg" aria-label="Menu">
+        <i class="fas fa-bars"></i>
+    </div>
+
+    <!-- Mobile menu (initially hidden) -->
+    <div id="mobile-menu" class="fixed inset-0 bg-black bg-opacity-50 z-40 hidden" aria-hidden="true">
+        <div class="absolute right-0 top-0 bottom-0 w-64 bg-white dark:bg-gray-800 shadow-lg transform transition-transform duration-300 translate-x-full">
+            <div class="p-4 bg-gradient-to-r from-purple-600 to-indigo-600 text-white">
+                <div class="flex justify-between items-center">
+                    <h3 class="font-bold">AI Chat Menu</h3>
+                    <button id="close-mobile-menu" class="text-white" aria-label="Close menu">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="p-4 space-y-4">
+                <button id="mobile-history-btn" class="w-full text-left py-2 px-3 rounded flex items-center hover:bg-gray-100 dark:hover:bg-gray-700">
+                    <i class="fas fa-history mr-3"></i> Chat History
+                </button>
+                <button id="mobile-new-chat-btn" class="w-full text-left py-2 px-3 rounded flex items-center hover:bg-gray-100 dark:hover:bg-gray-700">
+                    <i class="fas fa-plus mr-3"></i> New Chat
+                </button>
+                <div class="border-t dark:border-gray-700 my-2 pt-2">
+                    <div class="flex items-center justify-between py-2">
+                        <span class="flex items-center">
+                            <i class="fas fa-moon mr-3"></i> Dark Mode
+                        </span>
+                        <label class="performance-toggle">
+                            <input type="checkbox" id="mobile-dark-mode">
+                            <span class="performance-slider"></span>
+                        </label>
+                    </div>
+                    <div class="flex items-center justify-between py-2">
+                        <span class="flex items-center">
+                            <i class="fas fa-bolt mr-3"></i> Speed Mode
+                        </span>
+                        <label class="performance-toggle">
+                            <input type="checkbox" id="mobile-performance-mode">
+                            <span class="performance-slider"></span>
+                        </label>
+                    </div>
+                    <div class="flex items-center justify-between py-2">
+                        <span class="flex items-center">
+                            <i class="fas fa-brain mr-3"></i> Thinking Mode
+                        </span>
+                        <label class="thinking-toggle">
+                            <input type="checkbox" id="mobile-thinking-mode">
+                            <span class="thinking-slider"></span>
+                        </label>
+                    </div>
+                </div>
+                <div class="border-t dark:border-gray-700 my-2 pt-2">
+                    <select id="mobile-model-selector" class="w-full bg-white border border-gray-300 rounded p-2 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                        <optgroup label="Google Models">
+                            <option value="gemini-2.0-flash">Gemini 2.0 Flash</option>
+                            <option value="gemini-1.5-flash">Gemini 1.5 Flash</option>
+                        </optgroup>
+                        <optgroup label="OpenAI Models">
+                            <option value="gpt-4o">GPT-4o</option>
+                            <option value="gpt-4o-vision">GPT-4o Vision</option>
+                            <option value="dall-e-3">DALL-E 3</option>
+                        </optgroup>
+                        <optgroup label="Claude Models">
+                            <option value="claude-3-5-sonnet">Claude 3.5 Sonnet</option>
+                            <option value="claude-3-opus">Claude 3 Opus</option>
+                            <option value="claude-3-sonnet">Claude 3 Sonnet</option>
+                            <option value="claude-3-haiku">Claude 3 Haiku</option>
+                        </optgroup>
+                        <optgroup label="DeepSeek Models">
+                            <option value="deepseek-chat">DeepSeek Chat</option>
+                            <option value="deepseek-reasoner">DeepSeek Reasoner</option>
+                        </optgroup>
+                    </select>
+                </div>
+            </div>
+            <div class="absolute bottom-0 left-0 right-0 p-4 text-center text-xs text-gray-500 dark:text-gray-400">
+                <span id="mobile-usage-counter">Requests: 0</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="container mx-auto px-4 py-8 max-w-4xl">
+        <!-- User Consent Banner -->
+        <div id="consent-banner" class="bg-blue-50 border-l-4 border-blue-500 p-4 mb-4 rounded-md shadow dark:bg-blue-900 dark:bg-opacity-30 dark:border-blue-400">
+            <div class="flex items-start">
+                <div class="flex-shrink-0 pt-0.5">
+                    <i class="fas fa-info-circle text-blue-500"></i>
+                </div>
+                <div class="ml-3">
+                    <h3 class="text-sm font-medium text-blue-800 dark:text-blue-300">Important Information</h3>
+                    <div class="mt-1 text-sm text-blue-700 dark:text-blue-200">
+                        <p>This chatbot uses Puter.js with a "User Pays" model. When you use this application:</p>
+                        <ul class="list-disc ml-5 mt-1">
+                            <li><strong>You MUST allow pop-ups</strong> for this site to work</li>
+                            <li>You will see a consent dialog from Puter.js</li>
+                            <li>You'll need to agree to cover your own usage costs</li>
+                            <li>Choose from Google Gemini, OpenAI, Claude, or DeepSeek models</li>
+                            <li>DALL-E 3 allows image generation from text prompts</li>
+                            <li>GPT-4o Vision can analyze images you upload</li>
+                        </ul>
+                    </div>
+                    <div class="mt-2 flex space-x-3">
+                        <button id="dismiss-consent" class="text-sm text-blue-500 font-medium hover:text-blue-600 dark:text-blue-300 dark:hover:text-blue-200">
+                            I understand
+                        </button>
+                        <button id="check-popup-settings" class="text-sm text-purple-500 font-medium hover:text-purple-600 dark:text-purple-300 dark:hover:text-purple-200">
+                            Check if popups are blocked
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-lg overflow-hidden dark:bg-gray-800">
+            <div class="p-4 bg-gradient-to-r from-purple-600 to-indigo-600 text-white flex items-center justify-between">
+                <div class="flex items-center">
+                    <i class="fas fa-robot text-2xl mr-3"></i>
+                    <h1 class="text-xl font-bold">AI Chat</h1>
+                </div>
+                <div class="flex items-center gap-2">
+                    <!-- Dark mode toggle -->
+                    <button id="dark-mode-toggle" class="bg-white bg-opacity-20 rounded p-2 hover:bg-opacity-30 transition-colors" aria-label="Toggle dark mode" title="Toggle dark mode">
+                        <i class="fas fa-moon"></i>
+                    </button>
+                    
+                    <!-- Technical Mode toggle -->
+                    <div class="relative flex items-center mr-2 group" title="Technical mode provides more detailed code examples, research citations, and academic explanations">
+                        <span class="text-xs mr-2 whitespace-nowrap font-medium"><i class="fas fa-code mr-1"></i>Technical</span>
+                        <label class="technical-toggle" for="technical-mode">
+                            <input type="checkbox" id="technical-mode" aria-label="Toggle technical mode" title="Enable technical mode for more detailed explanations and code">
+                            <span class="technical-slider"></span>
+                        </label>
+                        <div class="absolute bottom-full left-0 mb-2 hidden group-hover:block w-56 bg-gray-800 text-white text-xs p-2 rounded shadow-lg z-10 dark:bg-gray-700">
+                            Technical mode optimizes responses for coders and researchers with detailed code examples, citations, and mathematical notation.
+                        </div>
+                    </div>
+                    
+                    <!-- Performance mode toggle -->
+                    <div class="relative flex items-center mr-2" title="Performance mode prioritizes faster responses">
+                        <span class="text-xs mr-2 whitespace-nowrap">Speed mode</span>
+                        <label class="performance-toggle" for="performance-mode">
+                            <input type="checkbox" id="performance-mode" aria-label="Toggle performance mode" title="Enable speed mode for faster responses">
+                            <span class="performance-slider"></span>
+                        </label>
+                    </div>
+                    
+                    <!-- Thinking mode toggle -->
+                    <div class="relative flex items-center mr-2 group" title="Thinking mode provides step-by-step reasoning, deeper analysis and comprehensive responses">
+                        <span class="text-xs mr-2 whitespace-nowrap font-medium"><i class="fas fa-brain mr-1"></i>Thinking Mode</span>
+                        <label class="thinking-toggle" for="thinking-mode">
+                            <input type="checkbox" id="thinking-mode" aria-label="Toggle thinking mode" title="Enable thinking mode for structured reasoning and comprehensive analysis">
+                            <span class="thinking-slider"></span>
+                        </label>
+                        <div class="absolute bottom-full left-0 mb-2 hidden group-hover:block w-56 bg-gray-800 text-white text-xs p-2 rounded shadow-lg z-10 dark:bg-gray-700">
+                            Provides step-by-step reasoning and structured analysis. Ideal for complex questions or when you need detailed explanations.
+                        </div>
+                    </div>
+                    
+                    <button id="history-btn" class="bg-white bg-opacity-20 rounded p-2 hover:bg-opacity-30 transition-colors" aria-label="View chat history" title="Chat history (Ctrl/Cmd+H)">
+                        <i class="fas fa-history"></i>
+                    </button>
+                    <select id="model-selector" class="bg-white bg-opacity-20 text-white border-0 rounded p-1" aria-label="Select AI model">
+                        <optgroup label="Google Models">
+                            <option value="gemini-2.0-flash">Gemini 2.0 Flash - Fast & Efficient</option>
+                            <option value="gemini-1.5-flash">Gemini 1.5 Flash - Balanced Performance</option>
+                            <option value="gemini-1.5-pro">Gemini 1.5 Pro - Advanced Code & Research</option>
+                        </optgroup>
+                        <optgroup label="OpenAI Models">
+                            <option value="gpt-4o">GPT-4o - Latest & Versatile</option>
+                            <option value="gpt-4o-vision">GPT-4o Vision - Image Analysis</option>
+                            <option value="dall-e-3">DALL-E 3 - Image Generation</option>
+                        </optgroup>
+                        <optgroup label="Claude Models">
+                            <option value="claude-3-5-sonnet">Claude 3.5 Sonnet - Latest & Fastest</option>
+                            <option value="claude-3-opus">Claude 3 Opus - Most Powerful</option>
+                            <option value="claude-3-sonnet">Claude 3 Sonnet - Balanced</option>
+                            <option value="claude-3-haiku">Claude 3 Haiku - Efficient</option>
+                        </optgroup>
+                        <optgroup label="DeepSeek Models">
+                            <option value="deepseek-chat">DeepSeek Chat - General Purpose</option>
+                            <option value="deepseek-coder">DeepSeek Coder - Programming Expert</option>
+                            <option value="deepseek-reasoner">DeepSeek Reasoner - Problem Solving</option>
+                        </optgroup>
+                    </select>
+                </div>
+            </div>
+            
+            <div id="chat-container" class="chat-container p-4 bg-gray-50 dark:bg-gray-900 relative">
+                <div class="flex flex-col space-y-4">
+                    <!-- System welcome message -->
+                    <div class="flex items-start">
+                        <div class="flex-shrink-0 bg-gradient-to-r from-purple-600 to-indigo-600 rounded-full p-2 mr-3">
+                            <i class="fas fa-robot text-white"></i>
+                        </div>
+                        <div class="bg-gray-200 rounded-lg p-3 max-w-3xl dark:bg-gray-700 assistant-message">
+                            <p class="text-gray-800 dark:text-gray-100">Hello! I'm ready to assist you today. Choose a model from the dropdown above and start chatting!</p>
+                        </div>
+                    </div>
+                </div>
+                <!-- Scroll to bottom button -->
+                <button id="scroll-to-bottom" class="scroll-to-bottom" aria-label="Scroll to bottom">
+                    <i class="fas fa-arrow-down"></i>
+                </button>
+            </div>
+            
+            <div class="border-t border-gray-200 p-4 bg-white dark:bg-gray-800 dark:border-gray-700">
+                <form id="chat-form" class="flex flex-col space-y-3">
+                    <!-- Quick action buttons for developers and researchers -->
+                    <div class="flex flex-wrap gap-2 mb-2" id="quick-actions">
+                        <button type="button" class="text-xs px-2 py-1 bg-blue-100 text-blue-700 rounded hover:bg-blue-200 transition-colors dark:bg-blue-900 dark:bg-opacity-30 dark:text-blue-300" data-action="explain-code">
+                            <i class="fas fa-code mr-1"></i>Explain Code
+                        </button>
+                        <button type="button" class="text-xs px-2 py-1 bg-green-100 text-green-700 rounded hover:bg-green-200 transition-colors dark:bg-green-900 dark:bg-opacity-30 dark:text-green-300" data-action="debug-code">
+                            <i class="fas fa-bug mr-1"></i>Debug Code
+                        </button>
+                        <button type="button" class="text-xs px-2 py-1 bg-purple-100 text-purple-700 rounded hover:bg-purple-200 transition-colors dark:bg-purple-900 dark:bg-opacity-30 dark:text-purple-300" data-action="optimize-code">
+                            <i class="fas fa-bolt mr-1"></i>Optimize Code
+                        </button>
+                        <button type="button" class="text-xs px-2 py-1 bg-amber-100 text-amber-700 rounded hover:bg-amber-200 transition-colors dark:bg-amber-900 dark:bg-opacity-30 dark:text-amber-300" data-action="research-summary">
+                            <i class="fas fa-book mr-1"></i>Research Summary
+                        </button>
+                        <button type="button" class="text-xs px-2 py-1 bg-red-100 text-red-700 rounded hover:bg-red-200 transition-colors dark:bg-red-900 dark:bg-opacity-30 dark:text-red-300" data-action="math-solution">
+                            <i class="fas fa-square-root-alt mr-1"></i>Math Solution
+                        </button>
+                    </div>
+                    
+                    <div class="flex space-x-2 send-button-container">
+                        <textarea 
+                            id="user-input" 
+                            class="flex-1 border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                            placeholder="Type your message here..."
+                            autocomplete="off"
+                            rows="1"
+                            aria-label="Your message"
+                        ></textarea>
+                        <button 
+                            type="submit" 
+                            id="send-button"
+                            class="bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-full hover:opacity-90 transition-opacity ripple"
+                            title="Send message (Ctrl/Cmd+Enter)"
+                            aria-label="Send message"
+                        >
+                            <i class="fas fa-paper-plane"></i>
+                        </button>
+                    </div>
+                    <div id="image-upload-container" class="flex items-center space-x-2" style="display: none;">
+                        <button 
+                            type="button" 
+                            id="image-upload-btn" 
+                            class="bg-gray-200 text-gray-700 px-3 py-1 rounded-lg hover:bg-gray-300 transition-colors flex items-center dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
+                            aria-label="Upload image"
+                            title="Upload an image for analysis"
+                        >
+                            <i class="fas fa-image mr-2"></i>
+                            <span>Upload Image</span>
+                        </button>
+                        <div id="image-preview-container" class="hidden flex-1">
+                            <div class="relative inline-block">
+                                <img id="image-preview" class="h-12 rounded-md object-cover" alt="Preview">
+                                <button 
+                                    type="button" 
+                                    id="remove-image-btn" 
+                                    class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center hover:bg-red-600"
+                                    aria-label="Remove image"
+                                    title="Remove image"
+                                >
+                                    <i class="fas fa-times text-xs"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <input type="file" id="image-upload-input" accept="image/*" class="hidden">
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <div class="flex justify-between items-center mt-4 text-gray-500 text-sm">
+            <p>Using Gemini, Claude, DeepSeek, GPT-4o, and DALL-E models via Puter.js - No API keys required</p>
+            <div class="flex items-center gap-2">
+                <span id="usage-counter" class="text-xs bg-gray-200 px-2 py-1 rounded dark:bg-gray-700">Requests: 0</span>
+                <a href="#" id="keyboard-shortcuts-btn" class="text-xs text-purple-500 hover:text-purple-600 dark:text-purple-400" aria-label="Keyboard shortcuts">
+                    <i class="fas fa-keyboard"></i>
+                </a>
+            </div>
+        </div>
+        
+        <!-- Install PWA button (hidden by default) -->
+        <div id="install-pwa" class="fixed bottom-4 left-4 bg-white rounded-lg shadow-lg p-4 hidden dark:bg-gray-800">
+            <p class="text-sm mb-2 dark:text-white">Install AI Chat as an app</p>
+            <div class="flex space-x-2">
+                <button id="install-pwa-btn" class="text-sm bg-gradient-to-r from-purple-600 to-indigo-600 text-white px-4 py-1 rounded">
+                    Install
+                </button>
+                <button id="dismiss-pwa-btn" class="text-sm bg-gray-200 text-gray-800 px-2 py-1 rounded dark:bg-gray-700 dark:text-gray-300">
+                    Not now
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Code playground modal (hidden by default) -->
+    <div id="code-playground" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden items-center justify-center">
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-6 max-w-4xl w-full max-h-[90vh] flex flex-col">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-bold text-gray-900 dark:text-white">Code Playground</h3>
+                <button id="close-playground" class="text-gray-400 hover:text-gray-500 dark:text-gray-300 dark:hover:text-gray-200">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="flex flex-col md:flex-row gap-4 flex-1 overflow-hidden">
+                <div class="flex-1 flex flex-col">
+                    <div class="flex justify-between items-center mb-2">
+                        <h4 class="font-medium">Code Editor</h4>
+                        <select id="playground-language" class="text-sm border border-gray-300 rounded px-2 py-1 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                            <option value="javascript">JavaScript</option>
+                            <option value="python">Python</option>
+                            <option value="html">HTML</option>
+                            <option value="css">CSS</option>
+                            <option value="java">Java</option>
+                            <option value="cpp">C++</option>
+                        </select>
+                    </div>
+                    <textarea id="playground-editor" class="flex-1 w-full p-4 font-mono text-sm border border-gray-300 rounded dark:bg-gray-700 dark:border-gray-600 dark:text-white"></textarea>
+                </div>
+                <div class="flex-1 flex flex-col">
+                    <div class="flex justify-between items-center mb-2">
+                        <h4 class="font-medium">Output</h4>
+                        <button id="playground-run" class="bg-green-500 text-white text-sm px-3 py-1 rounded hover:bg-green-600 transition-colors">
+                            <i class="fas fa-play mr-1"></i>Run
+                        </button>
+                    </div>
+                    <div id="playground-output" class="flex-1 p-4 bg-gray-100 dark:bg-gray-900 font-mono text-sm border border-gray-300 dark:border-gray-600 rounded overflow-auto"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/line-numbers/prism-line-numbers.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/autoloader/prism-autoloader.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js"></script>
+    <script src="code-execution.js"></script>
+    <script src="keyboard-shortcuts.js"></script>
+    <script src="app.js"></script>
+    <script>
+        // Service Worker Registration
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('service-worker.js')
+                    .then(registration => {
+                        console.log('Service Worker registered with scope:', registration.scope);
+                    })
+                    .catch(error => {
+                        console.error('Service Worker registration failed:', error);
+                    });
+            });
+        }
+        
+        // PWA installation handling
+        let deferredPrompt;
+        const installPWA = document.getElementById('install-pwa');
+        const installPWABtn = document.getElementById('install-pwa-btn');
+        const dismissPWABtn = document.getElementById('dismiss-pwa-btn');
+        
+        window.addEventListener('beforeinstallprompt', (e) => {
+            // Prevent Chrome 67+ from automatically showing the prompt
+            e.preventDefault();
+            // Stash the event so it can be triggered later
+            deferredPrompt = e;
+            // Update UI to notify the user they can add to home screen
+            installPWA.classList.remove('hidden');
+        });
+        
+        if (installPWABtn) {
+            installPWABtn.addEventListener('click', async () => {
+                // Hide the prompt
+                installPWA.classList.add('hidden');
+                // Show the install prompt
+                if (deferredPrompt) {
+                    deferredPrompt.prompt();
+                    // Wait for the user to respond to the prompt
+                    const { outcome } = await deferredPrompt.userChoice;
+                    // We've used the prompt, and can't use it again, throw it away
+                    deferredPrompt = null;
+                    console.log(`User ${outcome} the A2HS prompt`);
+                }
+            });
+        }
+        
+        if (dismissPWABtn) {
+            dismissPWABtn.addEventListener('click', () => {
+                installPWA.classList.add('hidden');
+            });
+        }
+        
+        // Mobile menu functionality
+        const mobileFab = document.getElementById('mobile-fab');
+        const mobileMenu = document.getElementById('mobile-menu');
+        const closeMobileMenu = document.getElementById('close-mobile-menu');
+        const mobileMenuContent = mobileMenu?.querySelector('div.transform');
+        
+        if (mobileFab && mobileMenu) {
+            mobileFab.addEventListener('click', () => {
+                mobileMenu.classList.remove('hidden');
+                setTimeout(() => {
+                    if (mobileMenuContent) {
+                        mobileMenuContent.classList.remove('translate-x-full');
+                    }
+                }, 10);
+            });
+        }
+        
+        if (closeMobileMenu && mobileMenu) {
+            closeMobileMenu.addEventListener('click', () => {
+                if (mobileMenuContent) {
+                    mobileMenuContent.classList.add('translate-x-full');
+                }
+                setTimeout(() => {
+                    mobileMenu.classList.add('hidden');
+                }, 300);
+            });
+            
+            // Close when clicking outside
+            mobileMenu.addEventListener('click', (e) => {
+                if (e.target === mobileMenu) {
+                    if (mobileMenuContent) {
+                        mobileMenuContent.classList.add('translate-x-full');
+                    }
+                    setTimeout(() => {
+                        mobileMenu.classList.add('hidden');
+                    }, 300);
+                }
+            });
+        }
+        
+        // Scroll to bottom button logic
+        const chatContainer = document.getElementById('chat-container');
+        const scrollToBottomBtn = document.getElementById('scroll-to-bottom');
+        
+        if (chatContainer && scrollToBottomBtn) {
+            chatContainer.addEventListener('scroll', () => {
+                const isNearBottom = chatContainer.scrollHeight - chatContainer.scrollTop - chatContainer.clientHeight < 100;
+                if (isNearBottom) {
+                    scrollToBottomBtn.style.display = 'none';
+                } else {
+                    scrollToBottomBtn.style.display = 'flex';
+                }
+            });
+            
+            scrollToBottomBtn.addEventListener('click', () => {
+                chatContainer.scrollTop = chatContainer.scrollHeight;
+            });
+        }
+    </script>
+</body>
+</html>
