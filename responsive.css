@@ -1,0 +1,812 @@
+/**
+ * Modern Groq-inspired Responsive Styles for AI Chat Application
+ * Provides elegant layouts for mobile, tablet, and desktop views
+ */
+
+/* ========== Core Responsive Framework ========== */
+
+:root {
+    --primary-color: #7c3aed;
+    --primary-dark: #6d28d9;
+    --primary-light: #a78bfa;
+    --background-light: #ffffff;
+    --background-dark: #0f172a;
+    --text-light: #1e293b;
+    --text-dark: #e2e8f0;
+    --user-message-light: #f1f5f9;
+    --user-message-dark: #1e293b;
+    --assistant-message-light: #f8fafc;
+    --assistant-message-dark: #1e293b;
+    --border-light: #e2e8f0;
+    --border-dark: #334155;
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    --font-sans: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    --transition-normal: all 0.3s ease;
+    --border-radius-sm: 0.375rem;
+    --border-radius-md: 0.75rem;
+    --border-radius-lg: 1.5rem;
+    --border-radius-full: 9999px;
+}
+
+html.dark {
+    --primary-color: #8b5cf6;
+    --primary-dark: #7c3aed;
+    --primary-light: #a78bfa;
+}
+
+body {
+    font-family: var(--font-sans);
+    color: var(--text-light);
+    line-height: 1.5;
+    background-color: var(--background-light);
+    transition: var(--transition-normal);
+}
+
+html.dark body {
+    color: var(--text-dark);
+    background-color: var(--background-dark);
+}
+
+/* Base responsive container */
+.responsive-container {
+    width: 100%;
+    margin: 0 auto;
+    transition: max-width 0.3s ease;
+}
+
+/* Device-specific container sizing */
+@media (min-width: 640px) {
+    .responsive-container {
+        max-width: 640px;
+    }
+}
+
+@media (min-width: 768px) {
+    .responsive-container {
+        max-width: 768px;
+    }
+}
+
+@media (min-width: 1024px) {
+    .responsive-container {
+        max-width: 1024px;
+    }
+}
+
+@media (min-width: 1280px) {
+    .responsive-container {
+        max-width: 1280px;
+    }
+}
+
+/* ========== Modern Chat Container ========== */
+
+/* Modern chat container */
+.chat-container {
+    padding: 1rem !important;
+    padding-bottom: 180px !important;
+    border-radius: var(--border-radius-md);
+    box-shadow: var(--shadow-md);
+    background: var(--background-light);
+    width: 100%;
+    box-sizing: border-box;
+    transition: var(--transition-normal);
+    border: 1px solid var(--border-light);
+}
+
+html.dark .chat-container {
+    background: var(--background-dark);
+    border-color: var(--border-dark);
+}
+
+.chat-container .max-w-3xl {
+    max-width: 95% !important;
+    margin: 0 auto;
+}
+
+/* ========== Elegant Message Bubbles ========== */
+
+/* Modern message bubble styles */
+.user-message, .assistant-message {
+    padding: 1rem 1.25rem;
+    margin-bottom: 1.5rem !important;
+    border-radius: var(--border-radius-md);
+    transition: var(--transition-normal);
+    word-break: break-word;
+    -webkit-hyphens: auto;
+    hyphens: auto;
+    line-height: 1.6;
+    font-size: 0.95rem;
+    max-width: 85%;
+}
+
+.user-message {
+    background-color: var(--user-message-light);
+    border: 1px solid var(--border-light);
+    box-shadow: var(--shadow-sm);
+    align-self: flex-end;
+    margin-left: auto;
+}
+
+.assistant-message {
+    background-color: var(--assistant-message-light);
+    border: 1px solid var(--border-light);
+    box-shadow: var(--shadow-sm);
+    align-self: flex-start;
+}
+
+html.dark .user-message {
+    background-color: var(--user-message-dark);
+    border-color: var(--border-dark);
+    color: var(--text-dark);
+}
+
+html.dark .assistant-message {
+    background-color: var(--assistant-message-dark);
+    border-color: var(--border-dark);
+    color: var(--text-dark);
+}
+
+/* ========== Modern Header & Input Styling ========== */
+
+/* Modern header styling */
+header {
+    padding: 0.75rem 1rem !important;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    background-color: rgba(255, 255, 255, 0.8);
+    border-bottom: 1px solid var(--border-light);
+    transition: var(--transition-normal);
+}
+
+html.dark header {
+    background-color: rgba(15, 23, 42, 0.8);
+    border-color: var(--border-dark);
+}
+
+/* Modern input container */
+.input-container {
+    padding: 0.75rem 1rem !important;
+    z-index: 20;
+    position: relative;
+    width: 100%;
+    box-sizing: border-box;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    background-color: rgba(255, 255, 255, 0.8);
+    border-top: 1px solid var(--border-light);
+    transition: var(--transition-normal);
+}
+
+html.dark .input-container {
+    background-color: rgba(15, 23, 42, 0.8);
+    border-color: var(--border-dark);
+}
+
+/* Modern sidebar */
+.sidebar {
+    background-color: var(--background-light);
+    border-right: 1px solid var(--border-light);
+    transition: var(--transition-normal);
+}
+
+html.dark .sidebar {
+    background-color: var(--background-dark);
+    border-color: var(--border-dark);
+}
+
+.sidebar-header {
+    padding: 0.75rem !important;
+    border-bottom: 1px solid var(--border-light);
+}
+
+html.dark .sidebar-header {
+    border-color: var(--border-dark);
+}
+
+/* ========== Modern Avatar Styling ========== */
+
+/* Modern avatar */
+.avatar {
+    width: 36px;
+    height: 36px;
+    margin-top: 2px;
+    border-radius: var(--border-radius-full);
+    box-shadow: var(--shadow-sm);
+    border: 2px solid var(--primary-light);
+    overflow: hidden;
+}
+
+/* ========== Enhanced Scrollbar ========== */
+
+/* Modern scrollbar */
+.custom-scrollbar::-webkit-scrollbar {
+    width: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+    background-color: var(--primary-light);
+    border-radius: var(--border-radius-full);
+}
+
+/* ========== Modern Input Field ========== */
+
+/* Modern input field */
+#user-input {
+    border-radius: var(--border-radius-full);
+    resize: none;
+    overflow-y: auto;
+    transition: var(--transition-normal);
+    border: 1px solid var(--border-light);
+    background-color: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    padding: 0.875rem 3rem 0.875rem 1.25rem !important;
+    box-shadow: var(--shadow-sm);
+    font-family: var(--font-sans);
+    line-height: 1.5;
+}
+
+html.dark #user-input {
+    background-color: rgba(30, 41, 59, 0.8);
+    border-color: var(--border-dark);
+    color: var(--text-dark);
+}
+
+#user-input:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px var(--primary-light);
+    border-color: var(--primary-color);
+}
+
+/* Modern send button */
+.send-button {
+    position: absolute;
+    right: 12px;
+    bottom: 50%;
+    transform: translateY(50%);
+    background-color: var(--primary-color);
+    color: white;
+    border-radius: var(--border-radius-full);
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: var(--transition-normal);
+    box-shadow: var(--shadow-sm);
+}
+
+.send-button:hover {
+    transform: translateY(50%) scale(1.05);
+    background-color: var(--primary-dark);
+    box-shadow: var(--shadow-md);
+}
+
+/* ========== Modern Button Styling ========== */
+
+/* Modern buttons */
+button, .button {
+    border-radius: var(--border-radius-md);
+    transition: var(--transition-normal);
+    font-weight: 500;
+}
+
+button.primary, .button.primary {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+button.primary:hover, .button.primary:hover {
+    background-color: var(--primary-dark);
+    transform: translateY(-1px);
+}
+
+/* Modern model selector */
+#model-selector {
+    border-radius: var(--border-radius-md);
+    border: 1px solid var(--border-light);
+    background-color: var(--background-light);
+    transition: var(--transition-normal);
+    padding: 0.5rem 0.75rem;
+}
+
+html.dark #model-selector {
+    background-color: var(--background-dark);
+    border-color: var(--border-dark);
+    color: var(--text-dark);
+}
+
+/* ========== Modern Quick Actions ========== */
+
+/* Modern quick actions */
+#quick-actions button {
+    background-color: rgba(124, 58, 237, 0.1);
+    color: var(--primary-color);
+    border-radius: var(--border-radius-full);
+    transition: var(--transition-normal);
+    border: 1px solid transparent;
+}
+
+html.dark #quick-actions button {
+    background-color: rgba(139, 92, 246, 0.2);
+    color: var(--primary-light);
+}
+
+#quick-actions button:hover {
+    background-color: rgba(124, 58, 237, 0.2);
+    transform: translateY(-1px);
+    border-color: var(--primary-light);
+}
+
+/* ========== Modern Scroll To Bottom Button ========== */
+
+/* Modern scroll to bottom button */
+#scroll-to-bottom {
+    border-radius: var(--border-radius-full);
+    background-color: var(--primary-color);
+    box-shadow: var(--shadow-md);
+    transition: var(--transition-normal);
+}
+
+#scroll-to-bottom:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+}
+
+#scroll-to-bottom.visible {
+    opacity: 0.9;
+}
+
+/* ========== Code Block Styling ========== */
+
+/* Modern code blocks */
+pre, code {
+    font-family: var(--font-mono);
+    border-radius: var(--border-radius-sm);
+}
+
+pre {
+    background-color: #f8f9fa;
+    border: 1px solid #e9ecef;
+    padding: 1rem;
+    overflow-x: auto;
+}
+
+html.dark pre {
+    background-color: #1e293b;
+    border-color: #334155;
+}
+
+code {
+    background-color: #f1f5f9;
+    padding: 0.15rem 0.3rem;
+}
+
+html.dark code {
+    background-color: #334155;
+}
+
+/* ========== Enhanced Mobile Experience (< 640px) ========== */
+
+@media (max-width: 639px) {
+    /* Streamlined mobile header */
+    header {
+        padding: 0.5rem !important;
+        min-height: 50px; /* Ensure minimum clickable area */
+    }
+    
+    /* Compact mobile chat container */
+    .chat-container {
+        padding: 0.5rem !important;
+        padding-bottom: 120px !important; /* More space for input */
+        border-radius: 0;
+        border-left: none;
+        border-right: none;
+    }
+    
+    /* Optimized message bubbles for small screens */
+    .user-message, .assistant-message {
+        max-width: 90%;
+        padding: 0.75rem 1rem;
+        margin-bottom: 0.75rem;
+        font-size: 0.95rem;
+    }
+    
+    /* Compact quick action buttons with better scrolling */
+    #quick-actions {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        padding-bottom: 0.5rem;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+        gap: 0.35rem;
+        padding-left: 0.5rem;
+        padding-right: 0.5rem;
+    }
+    
+    #quick-actions::-webkit-scrollbar {
+        display: none;
+    }
+    
+    #quick-actions button {
+        white-space: nowrap;
+        flex-shrink: 0;
+        font-size: 0.8rem;
+        padding: 0.35rem 0.8rem;
+        min-height: 2rem;
+    }
+    
+    /* Improved mobile sidebar behavior */
+    .sidebar {
+        width: 85%; /* Wider mobile sidebar */
+        max-width: 280px;
+        z-index: 50;
+        box-shadow: var(--shadow-lg);
+    }
+    
+    /* Constrain the model selector for space */
+    #model-selector {
+        font-size: 0.9rem;
+        max-width: 100%;
+        width: 100%;
+    }
+    
+    /* Optimize input for mobile */
+    #user-input {
+        min-height: 42px;
+        padding: 12px 40px 12px 14px !important;
+        font-size: 16px; /* Prevent zoom on iOS */
+        border-radius: var(--border-radius-full);
+        -webkit-appearance: none; /* Remove default iOS styling */
+    }
+    
+    /* Touch-optimized buttons */
+    button, .button {
+        min-height: 2.5rem;
+        min-width: 2.5rem;
+        touch-action: manipulation; /* Improve touch behavior */
+    }
+    
+    /* Improved fixed position input container */
+    .chat-input-fixed {
+        width: 100% !important;
+        left: 0 !important;
+        padding: 0.5rem;
+        bottom: 0;
+    }
+    
+    .chat-input-fixed .max-w-3xl {
+        width: 100%;
+        padding-left: 0.5rem;
+        padding-right: 0.5rem;
+    }
+    
+    /* Fix content height calculation */
+    .chat-content-wrapper {
+        height: calc(100vh - 50px);
+    }
+    
+    /* More space at bottom for input */
+    .chat-container {
+        padding-bottom: 200px !important;
+    }
+    
+    /* Fix for iOS position:fixed issues */
+    @supports (-webkit-touch-callout: none) {
+        .chat-input-fixed {
+            position: sticky;
+            bottom: 0;
+            padding-bottom: env(safe-area-inset-bottom, 0);
+        }
+        
+        .chat-container {
+            padding-bottom: calc(200px + env(safe-area-inset-bottom, 0)) !important;
+        }
+    }
+    
+    /* Better visibility for scroll to bottom button */
+    #scroll-to-bottom.visible {
+        bottom: 120px !important;
+        right: 8px;
+        opacity: 0.9;
+    }
+}
+
+/* ========== Tablet Optimizations (640px - 1023px) ========== */
+
+@media (min-width: 640px) and (max-width: 1023px) {
+    /* Tablet layout improvements */
+    .chat-container {
+        padding: 1rem;
+        padding-bottom: 160px !important;
+        border-radius: var(--border-radius-md);
+    }
+    
+    /* Better spacing for tablet */
+    .user-message, .assistant-message {
+        max-width: 80%;
+        margin-bottom: 0.75rem;
+    }
+    
+    /* Sidebar width for tablets */
+    .sidebar {
+        width: 320px;
+        box-shadow: var(--shadow-md);
+    }
+    
+    /* Improved input positioning for tablets */
+    .chat-input-fixed {
+        width: 100% !important;
+        left: 0 !important;
+        padding: 0 1rem;
+    }
+    
+    /* Improved tablet-specific sidebar toggle */
+    #toggle-sidebar {
+        display: flex;
+        min-height: 40px;
+        min-width: 40px;
+    }
+    
+    /* Better quick action buttons for tablets */
+    #quick-actions button {
+        padding: 0.4rem 0.75rem;
+        font-size: 0.9rem;
+    }
+}
+
+/* ========== Desktop Enhancements (≥ 1024px) ========== */
+
+@media (min-width: 1024px) {
+    /* Desktop layout optimizations */
+    .container {
+        max-width: 90%;
+    }
+    
+    /* Chat container with more space for messages */
+    .chat-container {
+        padding: 1.5rem;
+        padding-bottom: 150px !important;
+        border-radius: var(--border-radius-md);
+    }
+    
+    /* Improved sidebar */
+    .sidebar {
+        width: 300px;
+        box-shadow: var(--shadow-sm);
+        transition: transform 0.3s ease, width 0.3s ease;
+    }
+    
+    /* Smooth main content adjustment */
+    .main-content {
+        margin-left: 300px;
+        transition: margin-left 0.3s ease;
+    }
+    
+    .main-content.full-width {
+        margin-left: 0;
+    }
+    
+    /* Improved input handling on desktop */
+    .chat-input-fixed {
+        width: calc(100% - 300px);
+        left: 300px;
+        transition: width 0.3s ease, left 0.3s ease;
+    }
+    
+    .main-content.full-width .chat-input-fixed {
+        width: 100%;
+        left: 0;
+    }
+    
+    /* Better desktop message appearance */
+    .user-message, .assistant-message {
+        max-width: 80%;
+    }
+}
+
+/* ========== Extra Large Desktop (≥ 1536px) ========== */
+
+@media (min-width: 1536px) {
+    /* Maximum space on extra large screens */
+    .chat-container .max-w-3xl {
+        max-width: 80% !important;
+        max-width: 1200px !important;
+    }
+    
+    /* Extra space for messages on large screens */
+    .chat-container {
+        padding: 2rem;
+        padding-bottom: 150px !important;
+        max-width: 1600px;
+        margin: 0 auto;
+    }
+    
+    /* Wider chat input on large screens */
+    #user-input {
+        max-width: 1100px;
+        margin: 0 auto;
+    }
+}
+
+/* ========== Accessibility Improvements ========== */
+
+/* Focus states for keyboard navigation */
+a:focus, button:focus, input:focus, select:focus, textarea:focus {
+    outline: 3px solid var(--primary-light);
+    outline-offset: 2px;
+}
+
+/* ========== Print Media Styles ========== */
+
+@media print {
+    .sidebar, .input-container, #scroll-to-bottom, .mobile-menu-button {
+        display: none !important;
+    }
+    
+    .main-content {
+        margin-left: 0 !important;
+    }
+    
+    .chat-container {
+        padding: 0 !important;
+        box-shadow: none;
+        background: none;
+    }
+}
+
+/* ========== Fix Safari Mobile Issues ========== */
+
+/* Fix for viewport height issues on mobile Safari */
+@supports (-webkit-touch-callout: none) {
+    .chat-content-wrapper, .sidebar {
+        height: -webkit-fill-available;
+    }
+    
+    .vh-100 {
+        height: -webkit-fill-available;
+    }
+}
+
+/* ========== Smooth Scroll Behavior ========== */
+
+.chat-container {
+    scroll-behavior: smooth;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .chat-container {
+        scroll-behavior: auto;
+    }
+}
+
+/* ========== Notch/Cutout Handling ========== */
+
+.safe-area-top {
+    padding-top: env(safe-area-inset-top, 0);
+}
+
+.safe-area-bottom {
+    padding-bottom: env(safe-area-inset-bottom, 0);
+}
+
+/* ========== Enhanced Animation Effects ========== */
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.animate-fadeInUp {
+    animation: fadeInUp 0.3s ease forwards;
+}
+
+/* ========== Modern Animation Effects ========== */
+
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.5;
+    }
+}
+
+.animate-pulse {
+    animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+    0% {
+        background-position: -200% 0;
+    }
+    100% {
+        background-position: 200% 0;
+    }
+}
+
+.animate-shimmer {
+    background: linear-gradient(90deg, 
+        rgba(255, 255, 255, 0), 
+        rgba(255, 255, 255, 0.4), 
+        rgba(255, 255, 255, 0)
+    );
+    background-size: 200% 100%;
+    animation: shimmer 2s infinite;
+}
+
+html.dark .animate-shimmer {
+    background: linear-gradient(90deg,
+        rgba(30, 41, 59, 0),
+        rgba(30, 41, 59, 0.4),
+        rgba(30, 41, 59, 0)
+    );
+    background-size: 200% 100%;
+}
+
+/* ========== Loading Effects ========== */
+
+.typing-indicator {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.5rem 1rem;
+    background-color: var(--background-light);
+    border-radius: var(--border-radius-full);
+    box-shadow: var(--shadow-sm);
+    margin: 0.5rem 0;
+}
+
+html.dark .typing-indicator {
+    background-color: var(--background-dark);
+}
+
+.typing-indicator span {
+    height: 6px;
+    width: 6px;
+    margin: 0 2px;
+    background-color: var(--primary-color);
+    border-radius: 50%;
+    display: inline-block;
+    animation: bounce 1.5s infinite ease-in-out;
+}
+
+.typing-indicator span:nth-child(2) {
+    animation-delay: 0.2s;
+}
+
+.typing-indicator span:nth-child(3) {
+    animation-delay: 0.4s;
+}
+
+@keyframes bounce {
+    0%, 60%, 100% {
+        transform: translateY(0);
+    }
+    30% {
+        transform: translateY(-4px);
+    }
+}
+
+/* Button press effect for mobile */
+@media (max-width: 1023px) {
+    button:active {
+        transform: scale(0.96);
+    }
+}
+
+
