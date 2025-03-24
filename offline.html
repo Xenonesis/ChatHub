@@ -2,15 +2,26 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>AI Chat - Offline</title>
     <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="icons/icon-192x192.png">
     <style>
+        :root {
+            --safe-area-inset-top: env(safe-area-inset-top, 0px);
+            --safe-area-inset-bottom: env(safe-area-inset-bottom, 0px);
+            --primary-color: #8b5cf6;
+            --primary-dark: #6d28d9;
+            --text-color: white;
+            --animation-duration: 2s;
+        }
+        
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background: linear-gradient(135deg, #8b5cf6, #6d28d9);
-            color: white;
+            background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+            color: var(--text-color);
             height: 100vh;
+            height: calc(100vh - var(--safe-area-inset-top) - var(--safe-area-inset-bottom));
             margin: 0;
             display: flex;
             flex-direction: column;
@@ -18,79 +29,272 @@
             justify-content: center;
             text-align: center;
             padding: 0 20px;
+            padding-top: var(--safe-area-inset-top);
+            padding-bottom: var(--safe-area-inset-bottom);
         }
+        
         .container {
             max-width: 500px;
+            width: 100%;
             background-color: rgba(255, 255, 255, 0.1);
             backdrop-filter: blur(10px);
-            border-radius: 12px;
+            -webkit-backdrop-filter: blur(10px);
+            border-radius: 24px;
             padding: 30px;
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            margin: 20px;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
         }
+        
+        @media (max-width: 640px) {
+            .container {
+                padding: 25px 20px;
+            }
+        }
+        
         h1 {
             font-size: 2rem;
             margin-bottom: 20px;
+            font-weight: 700;
         }
+        
         p {
             font-size: 1.1rem;
             line-height: 1.6;
             margin-bottom: 25px;
             opacity: 0.9;
         }
+        
+        .icon-container {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 120px;
+            height: 120px;
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            margin-bottom: 30px;
+            position: relative;
+            overflow: hidden;
+        }
+        
         .icon {
             font-size: 4rem;
-            margin-bottom: 20px;
-            animation: pulse 2s infinite;
+            animation: pulse var(--animation-duration) infinite;
+            position: relative;
+            z-index: 2;
         }
+        
+        /* Animated waves */
+        .waves {
+            position: absolute;
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            z-index: 1;
+        }
+        
+        .wave1 {
+            animation: ripple 2s infinite;
+        }
+        
+        .wave2 {
+            animation: ripple 2s infinite 0.5s;
+        }
+        
+        .wave3 {
+            animation: ripple 2s infinite 1s;
+        }
+        
+        @keyframes ripple {
+            0% {
+                transform: scale(0.5);
+                opacity: 0.4;
+            }
+            100% {
+                transform: scale(1.5);
+                opacity: 0;
+            }
+        }
+        
         .button {
             background-color: white;
-            color: #6d28d9;
+            color: var(--primary-dark);
             border: none;
-            padding: 12px 25px;
+            padding: 16px 32px;
             border-radius: 50px;
             font-weight: bold;
+            font-size: 1.1rem;
             cursor: pointer;
-            transition: transform 0.2s, box-shadow 0.2s;
+            transition: transform 0.2s, box-shadow 0.2s, background-color 0.2s;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
             text-decoration: none;
             display: inline-block;
+            min-width: 180px;
+            margin-top: 1rem;
         }
-        .button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+        
+        .button:active {
+            transform: scale(0.97);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            background-color: #f9f9f9;
         }
+        
+        .retry-status {
+            margin-top: 1.5rem;
+            font-size: 0.9rem;
+            opacity: 0.7;
+            min-height: 1.5rem;
+            transition: opacity 0.3s ease;
+        }
+        
+        .hidden {
+            opacity: 0;
+        }
+        
+        /* Loader animation */
+        .loader {
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            display: inline-block;
+            margin-right: 8px;
+            vertical-align: middle;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
         @keyframes pulse {
             0% { transform: scale(1); }
             50% { transform: scale(1.1); }
             100% { transform: scale(1); }
         }
+        
+        /* For reduced motion preferences */
+        @media (prefers-reduced-motion: reduce) {
+            .icon, .waves, .wave1, .wave2, .wave3, .loader {
+                animation: none;
+            }
+            
+            * {
+                transition-duration: 0.01ms !important;
+            }
+        }
     </style>
 </head>
 <body>
     <div class="container">
-        <div class="icon">📡</div>
+        <div class="icon-container">
+            <div class="waves wave1"></div>
+            <div class="waves wave2"></div>
+            <div class="waves wave3"></div>
+            <div class="icon">📡</div>
+        </div>
         <h1>You're Offline</h1>
-        <p>AI Chat requires an internet connection to communicate with AI models. Please reconnect and try again.</p>
-        <p>Some previously visited pages might be available offline.</p>
-        <a href="/" class="button">Try Again</a>
+        <p>AI Chat requires an internet connection to communicate with AI models. We'll automatically reconnect when you're back online.</p>
+        <p>Some previously visited chats may still be available for viewing.</p>
+        <button id="retry-button" class="button">Retry Connection</button>
+        <div id="retry-status" class="retry-status hidden"></div>
     </div>
     
     <script>
-        // Check if we're back online
+        const retryButton = document.getElementById('retry-button');
+        const retryStatus = document.getElementById('retry-status');
+        let isRetrying = false;
+        let checkCount = 0;
+        let reconnectInterval;
+        
+        // Update status message
+        function updateStatus(message, isHidden = false) {
+            retryStatus.textContent = message;
+            if (isHidden) {
+                retryStatus.classList.add('hidden');
+            } else {
+                retryStatus.classList.remove('hidden');
+            }
+        }
+        
+        // Try to reach the main page
+        function checkConnection() {
+            if (isRetrying) return;
+            
+            isRetrying = true;
+            updateStatus('Checking connection...');
+            
+            // Add loader to button
+            retryButton.innerHTML = '<span class="loader"></span> Connecting...';
+            retryButton.disabled = true;
+            
+            // Try to fetch main page with cache buster
+            fetch('/?rand=' + Math.random(), { 
+                method: 'HEAD',
+                cache: 'no-cache'
+            })
+            .then(response => {
+                if (response.ok) {
+                    updateStatus('Connection restored! Redirecting...');
+                    setTimeout(() => {
+                        window.location.href = '/';
+                    }, 1000);
+                } else {
+                    throw new Error('Server returned ' + response.status);
+                }
+            })
+            .catch(err => {
+                console.log('Connection check failed:', err);
+                checkCount++;
+                
+                if (checkCount > 3) {
+                    updateStatus('Still offline. Will keep trying in background.');
+                    setTimeout(() => {
+                        updateStatus('', true);
+                    }, 3000);
+                } else {
+                    updateStatus('Network unavailable. Try again later.');
+                }
+                
+                // Reset button
+                retryButton.innerHTML = 'Retry Connection';
+                retryButton.disabled = false;
+                isRetrying = false;
+            });
+        }
+        
+        // Check connection when coming back online
         window.addEventListener('online', () => {
-            window.location.reload();
+            updateStatus('Network detected! Reconnecting...');
+            setTimeout(checkConnection, 1000);
         });
         
-        // Try to reach the network periodically
-        setInterval(() => {
-            fetch('/')
-                .then(response => {
-                    if(response.status === 200) {
-                        window.location.reload();
-                    }
-                })
-                .catch(err => console.log('Still offline'));
-        }, 5000);
+        // Listen for offline events
+        window.addEventListener('offline', () => {
+            updateStatus('Your device is offline', true);
+            clearInterval(reconnectInterval);
+        });
+        
+        // Start periodic check if already online
+        if (navigator.onLine) {
+            reconnectInterval = setInterval(() => {
+                if (!isRetrying) {
+                    checkConnection();
+                }
+            }, 30000); // Check every 30 seconds
+        }
+        
+        // Manual retry button
+        retryButton.addEventListener('click', checkConnection);
+        
+        // Detect if we're in standalone PWA mode
+        if (window.matchMedia('(display-mode: standalone)').matches || 
+            window.navigator.standalone === true) {
+            document.body.classList.add('pwa-mode');
+        }
     </script>
 </body>
 </html>

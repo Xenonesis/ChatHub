@@ -249,3 +249,93 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Expose the shortcuts manager globally so it can be accessed from app.js
 window.KeyboardShortcutsManager = KeyboardShortcutsManager;
+
+// Keyboard shortcuts
+document.addEventListener('keydown', function(e) {
+    // Search messages (Ctrl/Cmd + F)
+    if ((e.ctrlKey || e.metaKey) && e.key === 'f') {
+        e.preventDefault();
+        const searchToggle = document.querySelector('#search-toggle');
+        const searchContainer = document.querySelector('#message-search');
+        const searchInput = searchContainer?.querySelector('input');
+        
+        if (searchToggle && searchContainer && searchInput) {
+            searchContainer.classList.remove('hidden');
+            searchInput.focus();
+        }
+    }
+    
+    // Copy message/code (Ctrl/Cmd + C)
+    if ((e.ctrlKey || e.metaKey) && e.key === 'c') {
+        const selection = window.getSelection().toString();
+        if (!selection) {
+            const activeElement = document.activeElement;
+            const messageWrapper = activeElement.closest('.message-wrapper');
+            if (messageWrapper) {
+                const message = messageWrapper.querySelector('p').textContent;
+                copyToClipboard(message);
+                showToast('Message copied to clipboard');
+            }
+        }
+    }
+    
+    // Edit message (Ctrl/Cmd + E)
+    if ((e.ctrlKey || e.metaKey) && e.key === 'e') {
+        e.preventDefault();
+        const activeElement = document.activeElement;
+        const messageWrapper = activeElement.closest('.message-wrapper');
+        if (messageWrapper && messageWrapper.querySelector('.message-action-btn[title="Edit message"]')) {
+            toggleMessageEdit(messageWrapper);
+        }
+    }
+    
+    // Reply in thread (Ctrl/Cmd + R)
+    if ((e.ctrlKey || e.metaKey) && e.key === 'r') {
+        e.preventDefault();
+        const activeElement = document.activeElement;
+        const messageWrapper = activeElement.closest('.message-wrapper');
+        if (messageWrapper) {
+            showThreadReply(messageWrapper);
+        }
+    }
+    
+    // Add reaction (Ctrl/Cmd + Shift + E)
+    if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'E') {
+        e.preventDefault();
+        const activeElement = document.activeElement;
+        const messageWrapper = activeElement.closest('.message-wrapper');
+        if (messageWrapper) {
+            const reactionBtn = messageWrapper.querySelector('.reaction-btn.add-reaction');
+            if (reactionBtn) {
+                showEmojiPicker(reactionBtn);
+            }
+        }
+    }
+    
+    // Navigate search results (Up/Down arrows when search is active)
+    const searchResults = document.querySelector('.search-results.active');
+    if (searchResults) {
+        const results = Array.from(searchResults.querySelectorAll('.search-result-item'));
+        const activeResult = searchResults.querySelector('.search-result-item.active');
+        let activeIndex = results.indexOf(activeResult);
+        
+        if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            if (activeIndex < results.length - 1) {
+                results[activeIndex]?.classList.remove('active');
+                results[activeIndex + 1]?.classList.add('active');
+                results[activeIndex + 1]?.scrollIntoView({ block: 'nearest' });
+            }
+        } else if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            if (activeIndex > 0) {
+                results[activeIndex]?.classList.remove('active');
+                results[activeIndex - 1]?.classList.add('active');
+                results[activeIndex - 1]?.scrollIntoView({ block: 'nearest' });
+            }
+        } else if (e.key === 'Enter' && activeResult) {
+            e.preventDefault();
+            activeResult.click();
+        }
+    }
+});

@@ -2,7 +2,7 @@
 <html lang="en" class="light">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>AI Chat - Powered by Puter.js</title>
     <meta name="description" content="AI chat application powered by various AI models including Gemini, Claude, GPT-4o, and DALL-E">
     <meta name="theme-color" content="#7c3aed">
@@ -105,6 +105,9 @@
             --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
             --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
             --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            /* Add safe area variables for notched devices */
+            --safe-area-inset-top: env(safe-area-inset-top, 0px);
+            --safe-area-inset-bottom: env(safe-area-inset-bottom, 0px);
         }
         
         html.dark {
@@ -477,88 +480,151 @@
         /* Mobile experience improvements */
         @media (max-width: 640px) { /* Mobile */
             .chat-container {
-                height: calc(100vh - 200px);
+                height: calc(100vh - 200px - var(--safe-area-inset-bottom));
                 padding: 0.5rem 0.5rem 1.5rem 0.5rem !important;
+                -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
             }
             
             #user-input {
                 min-height: 44px;
                 padding: 12px 44px 12px 12px;
                 font-size: 16px; /* Prevent zoom on iOS */
+                border-radius: 20px;
+                -webkit-appearance: none; /* Remove iOS default styles */
             }
             
             .history-panel {
                 width: 280px;
+                top: 0;
+                padding-top: var(--safe-area-inset-top);
+                height: calc(100vh - var(--safe-area-inset-bottom));
+                z-index: 1000;
             }
             
             /* Improve quick action buttons on mobile */
+            #quick-actions {
+                display: flex;
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+                scrollbar-width: none; /* Firefox */
+                padding-bottom: 4px;
+                margin-bottom: 6px;
+            }
+            
+            #quick-actions::-webkit-scrollbar {
+                display: none; /* Hide scrollbar */
+            }
+            
             #quick-actions button {
                 padding: 0.5rem;
-                height: 36px;
+                height: 44px;
                 display: flex;
                 align-items: center;
                 justify-content: center;
-                min-width: 80px;
+                min-width: 90px;
+                flex-shrink: 0;
+                margin-right: 8px;
+                border-radius: 12px;
             }
             
-            /* Make model selector more compact on mobile */
+            /* Make model selector more touch-friendly on mobile */
             #model-selector {
                 min-width: 120px;
                 max-width: 140px;
                 font-size: 0.75rem;
                 text-overflow: ellipsis;
+                height: 44px;
             }
             
-            /* Improved mobile toggle buttons spacing */
-            .technical-toggle, .performance-toggle, .thinking-toggle {
-                width: 40px;
-                height: 20px;
+            /* Improved tap feedback */
+            .tap-highlight {
+                -webkit-tap-highlight-color: rgba(124, 58, 237, 0.2);
             }
             
-            .technical-slider:before, .performance-slider:before, .thinking-slider:before {
-                height: 14px;
-                width: 14px;
-                left: 3px;
-                bottom: 3px;
+            /* Mobile bottom sheet */
+            #mobile-menu .transform {
+                border-top-left-radius: 20px;
+                border-top-right-radius: 20px;
+                transform: translateY(100%);
+                bottom: 0;
+                height: auto;
+                max-height: 85vh;
+                width: 100%;
+                top: auto;
+                left: 0;
+                right: 0;
+                box-shadow: 0 -10px 25px -5px rgba(0, 0, 0, 0.1);
+                padding-bottom: calc(1rem + var(--safe-area-inset-bottom));
             }
             
-            input:checked + .technical-slider:before, 
-            input:checked + .performance-slider:before,
-            input:checked + .thinking-slider:before {
-                transform: translateX(20px);
+            #mobile-menu.active .transform {
+                transform: translateY(0);
             }
             
-            /* Improved mobile message display */
-            .assistant-message, .user-message {
-                max-width: 90%;
-                padding: 0.75rem;
-            }
-            
-            /* Floating action button for mobile */
-            #mobile-fab {
+            /* Modal dialog for mobile */
+            .mobile-dialog {
                 position: fixed;
-                bottom: 20px;
-                right: 20px;
-                width: 50px;
-                height: 50px;
-                background: linear-gradient(135deg, #8b5cf6, #6d28d9);
-                color: white;
-                border-radius: 50%;
-                display: flex;
-                align-items: center;
-                justify-content: center;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%) scale(0.95);
+                width: 90%;
+                max-width: 350px;
+                background: white;
+                border-radius: 20px;
+                z-index: 100;
+                padding: 1.5rem;
                 box-shadow: var(--shadow-lg);
-                z-index: 30;
-                transition: all 0.2s var(--animation-timing);
+                opacity: 0;
+                pointer-events: none;
+                transition: all 0.3s var(--animation-timing);
             }
             
-            #mobile-fab:active {
-                transform: scale(0.95);
+            .mobile-dialog.open {
+                opacity: 1;
+                pointer-events: auto;
+                transform: translate(-50%, -50%) scale(1);
             }
             
-            /* Hide certain elements on mobile */
-            .technical-toggle ~ span, .thinking-toggle ~ span, .performance-toggle ~ span {
-                display: none;
+            html.dark .mobile-dialog {
+                background: #1f2937;
+            }
+            
+            /* Improved chat bubbles on mobile */
+            .assistant-message, .user-message {
+                max-width: 92%;
+                padding: 0.75rem 1rem;
+                border-radius: 18px;
+            }
+            
+            .user-message {
+                border-radius: 18px 18px 4px 18px;
+            }
+            
+            .assistant-message {
+                border-radius: 18px 18px 18px 4px;
+            }
+            
+            /* Mobile-friendly bottom spacing */
+            .chat-container {
+                padding-bottom: calc(100px + var(--safe-area-inset-bottom)) !important;
+            }
+            
+            /* Fixed input container for mobile */
+            .input-container {
+                position: fixed;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                padding: 1rem;
+                padding-bottom: calc(1rem + var(--safe-area-inset-bottom));
+                background-color: white;
+                border-top: 1px solid rgba(0, 0, 0, 0.1);
+                z-index: 20;
+            }
+            
+            html.dark .input-container {
+                background-color: #1f2937;
+                border-color: rgba(255, 255, 255, 0.05);
             }
         }
 
@@ -568,23 +634,23 @@
             }
 
             .history-panel {
-                width: 300px;
+                width: 320px;
             }
 
             #model-selector {
                 min-width: 160px;
-                font-size: 0.8rem;
+                font-size: 0.85rem;
             }
             
             /* Tablet-friendly controls */
             .technical-toggle, .performance-toggle, .thinking-toggle {
-                width: 44px;
-                height: 22px;
+                width: 48px;
+                height: 24px;
             }
             
             .technical-slider:before, .performance-slider:before, .thinking-slider:before {
-                height: 16px;
-                width: 16px;
+                height: 18px;
+                width: 18px;
                 left: 3px;
                 bottom: 3px;
             }
@@ -592,12 +658,13 @@
             input:checked + .technical-slider:before, 
             input:checked + .performance-slider:before,
             input:checked + .thinking-slider:before {
-                transform: translateX(22px);
+                transform: translateX(24px);
             }
             
             /* Better spacing for messages on tablet */
             .assistant-message, .user-message {
                 max-width: 85%;
+                padding: 1rem 1.25rem;
             }
         }
 
@@ -964,15 +1031,162 @@
         /* Better mobile support */
         @media (max-width: 640px) { /* Mobile */
             .chat-container {
-                height: calc(100vh - 200px);
+                height: calc(100vh - 200px - var(--safe-area-inset-bottom));
+                padding: 0.5rem 0.5rem 1.5rem 0.5rem !important;
+                -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
             }
-
-.history-panel {
-    width: 280px;
-}
-
+            
+            #user-input {
+                min-height: 44px;
+                padding: 12px 44px 12px 12px;
+                font-size: 16px; /* Prevent zoom on iOS */
+                border-radius: 20px;
+                -webkit-appearance: none; /* Remove iOS default styles */
+            }
+            
+            /* Increase touch target sizes for mobile */
+            button {
+                min-height: 44px;
+                min-width: 44px;
+            }
+            
+            /* Enhance header for mobile */
+            .bg-gradient-to-r.from-purple-600.to-indigo-600 {
+                padding-top: calc(0.75rem + var(--safe-area-inset-top));
+            }
+            
+            .history-panel {
+                width: 280px;
+                top: 0;
+                padding-top: var(--safe-area-inset-top);
+                height: calc(100vh - var(--safe-area-inset-bottom));
+                z-index: 1000;
+            }
+            
+            /* Improve quick action buttons on mobile */
+            #quick-actions {
+                display: flex;
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+                scrollbar-width: none; /* Firefox */
+                padding-bottom: 4px;
+                margin-bottom: 6px;
+            }
+            
+            #quick-actions::-webkit-scrollbar {
+                display: none; /* Hide scrollbar */
+            }
+            
+            #quick-actions button {
+                padding: 0.5rem;
+                height: 44px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                min-width: 90px;
+                flex-shrink: 0;
+                margin-right: 8px;
+                border-radius: 12px;
+            }
+            
+            /* Make model selector more touch-friendly on mobile */
             #model-selector {
-                min-width: 150px;
+                min-width: 120px;
+                max-width: 140px;
+                font-size: 0.75rem;
+                text-overflow: ellipsis;
+                height: 44px;
+            }
+            
+            /* Improved tap feedback */
+            .tap-highlight {
+                -webkit-tap-highlight-color: rgba(124, 58, 237, 0.2);
+            }
+            
+            /* Mobile bottom sheet */
+            #mobile-menu .transform {
+                border-top-left-radius: 20px;
+                border-top-right-radius: 20px;
+                transform: translateY(100%);
+                bottom: 0;
+                height: auto;
+                max-height: 85vh;
+                width: 100%;
+                top: auto;
+                left: 0;
+                right: 0;
+                box-shadow: 0 -10px 25px -5px rgba(0, 0, 0, 0.1);
+                padding-bottom: calc(1rem + var(--safe-area-inset-bottom));
+            }
+            
+            #mobile-menu.active .transform {
+                transform: translateY(0);
+            }
+            
+            /* Modal dialog for mobile */
+            .mobile-dialog {
+                position: fixed;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%) scale(0.95);
+                width: 90%;
+                max-width: 350px;
+                background: white;
+                border-radius: 20px;
+                z-index: 100;
+                padding: 1.5rem;
+                box-shadow: var(--shadow-lg);
+                opacity: 0;
+                pointer-events: none;
+                transition: all 0.3s var(--animation-timing);
+            }
+            
+            .mobile-dialog.open {
+                opacity: 1;
+                pointer-events: auto;
+                transform: translate(-50%, -50%) scale(1);
+            }
+            
+            html.dark .mobile-dialog {
+                background: #1f2937;
+            }
+            
+            /* Improved chat bubbles on mobile */
+            .assistant-message, .user-message {
+                max-width: 92%;
+                padding: 0.75rem 1rem;
+                border-radius: 18px;
+            }
+            
+            .user-message {
+                border-radius: 18px 18px 4px 18px;
+            }
+            
+            .assistant-message {
+                border-radius: 18px 18px 18px 4px;
+            }
+            
+            /* Mobile-friendly bottom spacing */
+            .chat-container {
+                padding-bottom: calc(100px + var(--safe-area-inset-bottom)) !important;
+            }
+            
+            /* Fixed input container for mobile */
+            .input-container {
+                position: fixed;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                padding: 1rem;
+                padding-bottom: calc(1rem + var(--safe-area-inset-bottom));
+                background-color: white;
+                border-top: 1px solid rgba(0, 0, 0, 0.1);
+                z-index: 20;
+            }
+            
+            html.dark .input-container {
+                background-color: #1f2937;
+                border-color: rgba(255, 255, 255, 0.05);
             }
         }
 
@@ -982,11 +1196,37 @@
             }
 
             .history-panel {
-                width: 300px;
+                width: 320px;
             }
 
             #model-selector {
-                min-width: 180px;
+                min-width: 160px;
+                font-size: 0.85rem;
+            }
+            
+            /* Tablet-friendly controls */
+            .technical-toggle, .performance-toggle, .thinking-toggle {
+                width: 48px;
+                height: 24px;
+            }
+            
+            .technical-slider:before, .performance-slider:before, .thinking-slider:before {
+                height: 18px;
+                width: 18px;
+                left: 3px;
+                bottom: 3px;
+            }
+            
+            input:checked + .technical-slider:before, 
+            input:checked + .performance-slider:before,
+            input:checked + .thinking-slider:before {
+                transform: translateX(24px);
+            }
+            
+            /* Better spacing for messages on tablet */
+            .assistant-message, .user-message {
+                max-width: 85%;
+                padding: 1rem 1.25rem;
             }
         }
 
@@ -1624,18 +1864,14 @@
         </div>
     </div>
 
-    <!-- Floating action button for mobile -->
-    <div id="mobile-fab" class="floating-action-button shadow-lg" aria-label="Menu">
-        <i class="fas fa-bars"></i>
-    </div>
-
-    <!-- Mobile menu (initially hidden) -->
+    <!-- Mobile menu (improved bottom sheet design) -->
     <div id="mobile-menu" class="fixed inset-0 bg-black bg-opacity-50 z-40 hidden" aria-hidden="true">
-        <div class="absolute right-0 top-0 bottom-0 w-72 bg-white dark:bg-gray-800 shadow-xl transform transition-transform duration-300 translate-x-full flex flex-col">
-            <div class="p-5 bg-gradient-to-r from-purple-600 to-indigo-600 text-white">
+        <div class="absolute bg-white dark:bg-gray-800 shadow-xl transform transition-transform duration-300 overflow-hidden flex flex-col">
+            <div class="p-5 bg-gradient-to-r from-purple-600 to-indigo-600 text-white app-region-drag">
                 <div class="flex justify-between items-center">
-                    <h3 class="font-bold flex items-center"><i class="fas fa-robot mr-2"></i> AI Chat Menu</h3>
-                    <button id="close-mobile-menu" class="bg-white bg-opacity-20 hover:bg-opacity-30 rounded-full w-8 h-8 flex items-center justify-center transition-colors" aria-label="Close menu">
+                    <div class="h-1 w-16 bg-white bg-opacity-30 rounded-full mx-auto mb-4"></div>
+                    <h3 class="font-bold flex items-center no-drag"><i class="fas fa-robot mr-2"></i> AI Chat Menu</h3>
+                    <button id="close-mobile-menu" class="bg-white bg-opacity-20 hover:bg-opacity-30 rounded-full w-10 h-10 flex items-center justify-center transition-colors no-drag tap-highlight" aria-label="Close menu">
                         <i class="fas fa-times"></i>
                     </button>
                 </div>
@@ -1762,7 +1998,7 @@
         </div>
 
         <div class="bg-white rounded-2xl shadow-xl overflow-hidden dark:bg-gray-800 border border-gray-100 dark:border-gray-700 flex flex-col h-[calc(100vh-12rem)]">
-            <div class="p-4 sm:p-5 bg-gradient-to-r from-purple-600 via-purple-500 to-indigo-600 text-white flex items-center justify-between shadow-md relative overflow-hidden transition-all duration-300" style="backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);">
+            <div class="p-4 sm:p-5 bg-gradient-to-r from-purple-600 via-purple-500 to-indigo-600 text-white flex items-center justify-between shadow-md relative overflow-hidden transition-all duration-300 app-region-drag" style="backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);">
                 <!-- Animated background effect -->
                 <div class="absolute inset-0 bg-gradient-to-r from-purple-600 to-indigo-600 opacity-80 animate-gradient-shift"></div>
                 <!-- Subtle pattern overlay -->
@@ -1836,16 +2072,16 @@
                 </div>
                 
                 <!-- Mobile controls -->
-                <div class="flex sm:hidden items-center gap-2 z-10 relative">
-                    <button id="dark-mode-toggle-mobile" class="bg-white bg-opacity-20 rounded-full p-2 hover:bg-opacity-30 transition-colors" aria-label="Toggle dark mode" title="Toggle dark mode">
+                <div class="flex sm:hidden items-center gap-2 z-10 relative no-drag">
+                    <button id="dark-mode-toggle-mobile" class="bg-white bg-opacity-20 rounded-full p-2 hover:bg-opacity-30 transition-colors tap-highlight" aria-label="Toggle dark mode" title="Toggle dark mode">
                         <i class="fas fa-moon text-sm"></i>
                     </button>
                     
-                    <button id="history-btn-mobile" class="bg-white bg-opacity-20 rounded-full p-2 hover:bg-opacity-30 transition-colors" aria-label="View chat history" title="Chat history">
+                    <button id="history-btn-mobile" class="bg-white bg-opacity-20 rounded-full p-2 hover:bg-opacity-30 transition-colors tap-highlight" aria-label="View chat history" title="Chat history">
                         <i class="fas fa-history text-sm"></i>
                     </button>
                     
-                    <button id="mobile-menu-btn" class="bg-white bg-opacity-20 rounded-full p-2 hover:bg-opacity-30 transition-all duration-200" aria-label="Open menu" title="Menu">
+                    <button id="mobile-menu-btn" class="bg-white bg-opacity-20 rounded-full p-2 hover:bg-opacity-30 transition-all duration-200 tap-highlight" aria-label="Open menu" title="Menu">
                         <i class="fas fa-ellipsis-v text-sm"></i>
                     </button>
                 </div>
@@ -1910,24 +2146,24 @@
                 </div>
             </div>
             
-            <div class="border-t border-gray-200 p-4 bg-white dark:bg-gray-800 dark:border-gray-700">
+            <div class="border-t border-gray-200 p-4 bg-white dark:bg-gray-800 dark:border-gray-700 input-container">
                 <div class="max-w-3xl mx-auto">
                     <form id="chat-form" class="flex flex-col space-y-3">
-                        <!-- Quick action buttons for developers and researchers -->
+                        <!-- Quick action buttons with improved scrolling -->
                         <div class="flex flex-wrap gap-2 mb-3" id="quick-actions">
-                            <button type="button" class="text-xs px-3 py-1.5 bg-white border border-gray-200 text-gray-700 rounded-full hover:bg-gray-50 transition-colors dark:bg-gray-800 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-700 shadow-sm" data-action="explain-code">
+                            <button type="button" class="text-xs px-3 py-1.5 bg-white border border-gray-200 text-gray-700 rounded-full hover:bg-gray-50 transition-colors dark:bg-gray-800 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-700 shadow-sm tap-highlight" data-action="explain-code">
                                 <i class="fas fa-code mr-1.5 text-purple-500"></i><span class="hidden xs:inline">Explain</span> Code
                             </button>
-                            <button type="button" class="text-xs px-3 py-1.5 bg-white border border-gray-200 text-gray-700 rounded-full hover:bg-gray-50 transition-colors dark:bg-gray-800 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-700 shadow-sm" data-action="debug-code">
+                            <button type="button" class="text-xs px-3 py-1.5 bg-white border border-gray-200 text-gray-700 rounded-full hover:bg-gray-50 transition-colors dark:bg-gray-800 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-700 shadow-sm tap-highlight" data-action="debug-code">
                                 <i class="fas fa-bug mr-1.5 text-red-500"></i><span class="hidden xs:inline">Debug</span> Code
                             </button>
-                            <button type="button" class="text-xs px-3 py-1.5 bg-white border border-gray-200 text-gray-700 rounded-full hover:bg-gray-50 transition-colors dark:bg-gray-800 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-700 shadow-sm" data-action="optimize-code">
+                            <button type="button" class="text-xs px-3 py-1.5 bg-white border border-gray-200 text-gray-700 rounded-full hover:bg-gray-50 transition-colors dark:bg-gray-800 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-700 shadow-sm tap-highlight" data-action="optimize-code">
                                 <i class="fas fa-bolt mr-1.5 text-amber-500"></i><span class="hidden xs:inline">Optimize</span> Code
                             </button>
-                            <button type="button" class="text-xs px-3 py-1.5 bg-white border border-gray-200 text-gray-700 rounded-full hover:bg-gray-50 transition-colors dark:bg-gray-800 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-700 shadow-sm" data-action="research-summary">
+                            <button type="button" class="text-xs px-3 py-1.5 bg-white border border-gray-200 text-gray-700 rounded-full hover:bg-gray-50 transition-colors dark:bg-gray-800 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-700 shadow-sm tap-highlight" data-action="research-summary">
                                 <i class="fas fa-book mr-1.5 text-blue-500"></i><span class="hidden xs:inline">Research</span> Summary
                             </button>
-                            <button type="button" class="text-xs px-3 py-1.5 bg-white border border-gray-200 text-gray-700 rounded-full hover:bg-gray-50 transition-colors dark:bg-gray-800 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-700 shadow-sm" data-action="math-solution">
+                            <button type="button" class="text-xs px-3 py-1.5 bg-white border border-gray-200 text-gray-700 rounded-full hover:bg-gray-50 transition-colors dark:bg-gray-800 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-700 shadow-sm tap-highlight" data-action="math-solution">
                                 <i class="fas fa-square-root-alt mr-1.5 text-green-500"></i>Math <span class="hidden xs:inline">Solution</span>
                             </button>
                         </div>
@@ -1936,7 +2172,7 @@
                             <div class="relative flex-1">
                                 <textarea 
                                     id="user-input" 
-                                    class="w-full border border-gray-200 rounded-2xl px-4 py-3 pr-12 focus:outline-none focus:border-purple-400 focus:ring-2 focus:ring-purple-100 dark:bg-gray-800 dark:border-gray-700 dark:text-white dark:focus:ring-purple-900 dark:focus:ring-opacity-30 shadow-sm transition-all"
+                                    class="w-full border border-gray-200 rounded-2xl px-4 py-3 pr-12 focus:outline-none focus:border-purple-400 focus:ring-2 focus:ring-purple-100 dark:bg-gray-800 dark:border-gray-700 dark:text-white dark:focus:ring-purple-900 dark:focus:ring-opacity-30 shadow-sm transition-all tap-highlight"
                                     placeholder="Type your message here..."
                                     autocomplete="off"
                                     rows="1"
@@ -1945,7 +2181,7 @@
                                 <button 
                                     type="submit" 
                                     id="send-button"
-                                    class="absolute right-3 bottom-3 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-xl h-8 w-8 flex items-center justify-center hover:opacity-90 transition-all shadow hover:shadow-md active:shadow-inner"
+                                    class="absolute right-3 bottom-3 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-xl h-10 w-10 flex items-center justify-center hover:opacity-90 transition-all shadow hover:shadow-md active:shadow-inner tap-highlight"
                                     title="Send message (Ctrl/Cmd+Enter)"
                                     aria-label="Send message"
                                 >
@@ -1955,7 +2191,7 @@
                             <button 
                                 type="button" 
                                 id="image-upload-btn" 
-                                class="bg-white border border-gray-200 text-gray-700 rounded-xl h-12 w-12 flex items-center justify-center hover:bg-gray-50 transition-colors dark:bg-gray-800 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-700 shadow-sm"
+                                class="bg-white border border-gray-200 text-gray-700 rounded-xl h-12 w-12 flex items-center justify-center hover:bg-gray-50 transition-colors dark:bg-gray-800 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-700 shadow-sm tap-highlight"
                                 aria-label="Upload image"
                                 title="Upload an image for analysis"
                             >
@@ -2124,22 +2360,10 @@
         }
         
         // Mobile menu functionality
-        const mobileFab = document.getElementById('mobile-fab');
         const mobileMenu = document.getElementById('mobile-menu');
         const closeMobileMenu = document.getElementById('close-mobile-menu');
         const mobileMenuContent = mobileMenu?.querySelector('div.transform');
-        
-        if (mobileFab && mobileMenu) {
-            mobileFab.addEventListener('click', () => {
-                mobileMenu.classList.remove('hidden');
-                setTimeout(() => {
-                    if (mobileMenuContent) {
-                        mobileMenuContent.classList.remove('translate-x-full');
-                    }
-                }, 10);
-            });
-        }
-        
+
         if (closeMobileMenu && mobileMenu) {
             closeMobileMenu.addEventListener('click', () => {
                 if (mobileMenuContent) {
@@ -2149,7 +2373,7 @@
                     mobileMenu.classList.add('hidden');
                 }, 300);
             });
-            
+
             // Close when clicking outside
             mobileMenu.addEventListener('click', (e) => {
                 if (e.target === mobileMenu) {
@@ -2162,34 +2386,301 @@
                 }
             });
         }
-        
+
         // Scroll to bottom button logic
         const chatContainer = document.getElementById('chat-container');
         const scrollToBottomBtn = document.getElementById('scroll-to-bottom');
         
         if (chatContainer && scrollToBottomBtn) {
-            chatContainer.addEventListener('scroll', () => {
-                const isNearBottom = chatContainer.scrollHeight - chatContainer.scrollTop - chatContainer.clientHeight < 100;
+            // Check scroll position on load
+            const checkScrollPosition = () => {
+                const scrollPosition = chatContainer.scrollTop;
+                const scrollHeight = chatContainer.scrollHeight;
+                const clientHeight = chatContainer.clientHeight;
+                
+                // Show button if not near bottom (with buffer)
+                const scrollBuffer = Math.min(150, clientHeight * 0.2); // 20% of height or 150px
+                const isNearBottom = (scrollHeight - scrollPosition - clientHeight) < scrollBuffer;
+                
+                // Add/remove scrolled class for shadow effect
+                if (scrollPosition > 20) {
+                    chatContainer.classList.add('scrolled');
+                } else {
+                    chatContainer.classList.remove('scrolled');
+                }
+                
                 if (isNearBottom) {
                     scrollToBottomBtn.style.display = 'none';
+                    scrollToBottomBtn.classList.remove('visible');
                 } else {
                     scrollToBottomBtn.style.display = 'flex';
+                    // Add visible class after display flex for animation
+                    setTimeout(() => scrollToBottomBtn.classList.add('visible'), 10);
+                }
+            };
+            
+            // Initial check
+            setTimeout(checkScrollPosition, 500);
+            
+            // Check on scroll
+            chatContainer.addEventListener('scroll', checkScrollPosition);
+            
+            // Handle window resize
+            window.addEventListener('resize', checkScrollPosition);
+            
+            // Smooth scroll to bottom
+            scrollToBottomBtn.addEventListener('click', () => {
+                scrollToBottomBtn.classList.remove('visible');
+                setTimeout(() => {
+                    scrollToBottomBtn.style.display = 'none';
+                    chatContainer.scrollTo({
+                        top: chatContainer.scrollHeight,
+                        behavior: 'smooth'
+                    });
+                }, 200);
+            });
+            
+            // Add MutationObserver to detect new messages
+            const chatObserver = new MutationObserver(() => {
+                // If already at bottom, scroll to new bottom
+                const isNearBottom = (chatContainer.scrollHeight - chatContainer.scrollTop - chatContainer.clientHeight) < 100;
+                if (isNearBottom) {
+                    chatContainer.scrollTop = chatContainer.scrollHeight;
+                } else {
+                    checkScrollPosition();
                 }
             });
             
-            scrollToBottomBtn.addEventListener('click', () => {
-                chatContainer.scrollTop = chatContainer.scrollHeight;
-            });
+            chatObserver.observe(chatContainer, { childList: true, subtree: true });
         }
         
         // Auto resize textarea based on content
         const userInput = document.getElementById('user-input');
         if (userInput) {
-            userInput.addEventListener('input', function() {
-                this.style.height = 'auto';
-                this.style.height = (this.scrollHeight < 150) ? this.scrollHeight + 'px' : '150px';
-            });
+            // Function to resize the textarea
+            const resizeTextarea = () => {
+                // Reset height to auto first to get the correct scrollHeight
+                userInput.style.height = 'auto';
+                
+                // Max height for desktop and mobile
+                const maxHeight = window.innerWidth < 640 ? 120 : 150;
+                
+                // Set height based on content with maximum
+                userInput.style.height = (userInput.scrollHeight < maxHeight) 
+                    ? userInput.scrollHeight + 'px' 
+                    : maxHeight + 'px';
+            };
+            
+            // Initial resize
+            setTimeout(resizeTextarea, 100);
+            
+            // Resize on input
+            userInput.addEventListener('input', resizeTextarea);
+            
+            // Resize on window resize
+            window.addEventListener('resize', resizeTextarea);
+            
+            // Focus input when clicking on input container (mobile enhancement)
+            const inputContainer = document.querySelector('.input-container');
+            if (inputContainer) {
+                inputContainer.addEventListener('click', (e) => {
+                    // Only focus if the click wasn't on a button or the textarea itself
+                    if (!e.target.closest('button') && e.target !== userInput) {
+                        userInput.focus();
+                    }
+                });
+            }
         }
+        
+        // Enhanced mobile experience
+        document.addEventListener('DOMContentLoaded', function() {
+            // Apply iOS safe area insets
+            function applyIOSSafeAreas() {
+                document.documentElement.style.setProperty('--safe-area-inset-top', 'env(safe-area-inset-top)');
+                document.documentElement.style.setProperty('--safe-area-inset-bottom', 'env(safe-area-inset-bottom)');
+            }
+            
+            applyIOSSafeAreas();
+            
+            // Mobile swipe handler for history panel
+            const historyPanel = document.getElementById('history-panel');
+            const chatContainer = document.getElementById('chat-container');
+            
+            let touchStartX = 0;
+            let touchEndX = 0;
+            
+            document.addEventListener('touchstart', function(e) {
+                touchStartX = e.touches[0].clientX;
+            }, { passive: true });
+            
+            document.addEventListener('touchend', function(e) {
+                touchEndX = e.changedTouches[0].clientX;
+                handleSwipeGesture();
+            }, { passive: true });
+            
+            function handleSwipeGesture() {
+                // Swipe right to open history panel
+                if (touchEndX - touchStartX > 100 && touchStartX < 50) {
+                    if (historyPanel) historyPanel.classList.add('active');
+                }
+                
+                // Swipe left to close history panel
+                if (touchStartX - touchEndX > 100 && historyPanel && historyPanel.classList.contains('active')) {
+                    historyPanel.classList.remove('active');
+                }
+            }
+            
+            // Improve mobile scrolling experience
+            if (chatContainer) {
+                // Detect if at bottom
+                const isAtBottom = () => {
+                    const tolerance = 50; // pixels
+                    return (chatContainer.scrollHeight - chatContainer.scrollTop - chatContainer.clientHeight) < tolerance;
+                };
+                
+                // Smooth scroll to bottom
+                const scrollToBottom = (smooth = true) => {
+                    chatContainer.scrollTo({
+                        top: chatContainer.scrollHeight,
+                        behavior: smooth ? 'smooth' : 'auto'
+                    });
+                };
+                
+                // Watch for new content and scroll to bottom if already at bottom
+                const observer = new MutationObserver(() => {
+                    if (isAtBottom()) {
+                        scrollToBottom(false);
+                    }
+                });
+                
+                observer.observe(chatContainer, { childList: true, subtree: true });
+                
+                // When the input field gets focus, make sure content is scrolled into view
+                const userInput = document.getElementById('user-input');
+                if (userInput) {
+                    userInput.addEventListener('focus', () => {
+                        // Use a short delay to wait for virtual keyboard to appear
+                        setTimeout(() => {
+                            scrollToBottom();
+                        }, 300);
+                    });
+                }
+            }
+            
+            // Fix mobile input box layout issues
+            function adjustMobileInputContainer() {
+                const inputContainer = document.querySelector('.input-container');
+                const bodyHeight = document.body.offsetHeight;
+                const windowHeight = window.innerHeight;
+                const isKeyboardVisible = windowHeight < bodyHeight * 0.8;
+                
+                if (inputContainer) {
+                    if (isKeyboardVisible) {
+                        // Keyboard is visible, adjust container position
+                        inputContainer.style.position = 'absolute';
+                        inputContainer.style.bottom = '0';
+                    } else {
+                        // Keyboard is hidden, reset to fixed position
+                        inputContainer.style.position = 'fixed';
+                        inputContainer.style.bottom = '0';
+                    }
+                }
+            }
+            
+            // Check for viewport resize (keyboard appear/disappear)
+            if ('visualViewport' in window) {
+                window.visualViewport.addEventListener('resize', function() {
+                    adjustMobileInputContainer();
+                });
+                
+                window.visualViewport.addEventListener('scroll', function() {
+                    adjustMobileInputContainer();
+                });
+            }
+            
+            // Enhanced mobile button feedback
+            const mobileButtons = document.querySelectorAll('.tap-highlight');
+            mobileButtons.forEach(button => {
+                button.addEventListener('touchstart', function() {
+                    this.style.transform = 'scale(0.97)';
+                }, { passive: true });
+                
+                button.addEventListener('touchend', function() {
+                    this.style.transform = 'scale(1)';
+                }, { passive: true });
+                
+                button.addEventListener('touchcancel', function() {
+                    this.style.transform = 'scale(1)';
+                }, { passive: true });
+            });
+            
+            // Fix for mobile menu behavior
+            const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+            const mobileMenu = document.getElementById('mobile-menu');
+
+            if (mobileMenuBtn && mobileMenu) {
+                mobileMenuBtn.addEventListener('click', function() {
+                    mobileMenu.classList.remove('hidden');
+                    // Use requestAnimationFrame to ensure the display change takes effect first
+                    requestAnimationFrame(() => {
+                        const mobileMenuContent = mobileMenu.querySelector('.transform');
+                        if (mobileMenuContent) {
+                            mobileMenuContent.style.transform = 'translateY(0)';
+                        }
+                    });
+                });
+            }
+
+            const closeMobileMenu = document.getElementById('close-mobile-menu');
+            if (closeMobileMenu && mobileMenu) {
+                closeMobileMenu.addEventListener('click', function() {
+                    const mobileMenuContent = mobileMenu.querySelector('.transform');
+                    if (mobileMenuContent) {
+                        mobileMenuContent.style.transform = 'translateY(100%)';
+                    }
+                    setTimeout(() => {
+                        mobileMenu.classList.add('hidden');
+                    }, 300);
+                });
+                
+                // Close when tapping outside
+                mobileMenu.addEventListener('click', function(e) {
+                    if (e.target === mobileMenu) {
+                        closeMobileMenu.click();
+                    }
+                });
+            }
+            
+            // Handle history button on mobile
+            const historyBtnMobile = document.getElementById('history-btn-mobile');
+            if (historyBtnMobile && historyPanel) {
+                historyBtnMobile.addEventListener('click', function() {
+                    historyPanel.classList.add('active');
+                });
+            }
+            
+            // Sync mobile and desktop dark mode toggles
+            const darkModeToggle = document.getElementById('dark-mode-toggle');
+            const darkModeToggleMobile = document.getElementById('dark-mode-toggle-mobile');
+            const mobileDarkMode = document.getElementById('mobile-dark-mode');
+            
+            // Match mobile toggle with current dark mode status
+            if (mobileDarkMode) {
+                mobileDarkMode.checked = document.documentElement.classList.contains('dark');
+                
+                mobileDarkMode.addEventListener('change', function() {
+                    if (darkModeToggle && this.checked !== document.documentElement.classList.contains('dark')) {
+                        darkModeToggle.click();
+                    }
+                });
+            }
+            
+            if (darkModeToggleMobile && darkModeToggle) {
+                darkModeToggleMobile.addEventListener('click', function() {
+                    darkModeToggle.click();
+                });
+            }
+        });
     </script>
 </body>
 </html>

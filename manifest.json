@@ -2,11 +2,35 @@
   "name": "AI Chat Assistant",
   "short_name": "AI Chat",
   "description": "Chat with multiple AI models including Claude, GPT-4o, Gemini, and DeepSeek",
-  "start_url": "/index.html",
+  "start_url": "/?source=pwa",
   "display": "standalone",
+  "display_override": ["window-controls-overlay", "standalone", "minimal-ui"],
   "background_color": "#7c3aed",
   "theme_color": "#7c3aed",
-  "orientation": "portrait-primary",
+  "orientation": "any",
+  "scope": "/",
+  "launch_handler": {
+    "client_mode": ["focus-existing", "auto"]
+  },
+  "categories": ["productivity", "education", "utilities"],
+  "shortcuts": [
+    {
+      "name": "New Chat",
+      "short_name": "New",
+      "description": "Start a new chat",
+      "url": "/?newChat=true"
+    },
+    {
+      "name": "Chat History",
+      "short_name": "History",
+      "description": "View your chat history",
+      "url": "/?openHistory=true"
+    }
+  ],
+  "handle_links": "preferred",
+  "edge_side_panel": {
+    "preferred_width": 480
+  },
   "icons": [
     {
       "src": "icons/icon-72x72.png",
@@ -48,6 +72,33 @@
       "src": "icons/icon-512x512.png",
       "sizes": "512x512",
       "type": "image/png"
+    },
+    {
+      "src": "icons/icon-maskable.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
     }
-  ]
+  ],
+  "screenshots": [
+    {
+      "src": "icons/screenshot-1.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "AI Chat Assistant on desktop"
+    },
+    {
+      "src": "icons/screenshot-2.png",
+      "sizes": "720x1280",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "AI Chat Assistant on mobile"
+    }
+  ],
+  "capture_links": "existing-client-navigate",
+  "id": "ai-chat-puter",
+  "dir": "auto",
+  "lang": "en",
+  "prefer_related_applications": false
 }

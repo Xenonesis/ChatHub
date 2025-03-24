@@ -17,6 +17,73 @@ document.addEventListener('DOMContentLoaded', function() {
     const closeHistoryBtn = document.getElementById('close-history-btn');
     const newChatBtn = document.getElementById('new-chat-btn');
     
+    // Handle PWA launch parameters
+    function handlePWALaunchParams() {
+        const urlParams = new URLSearchParams(window.location.search);
+        
+        // Handle "New Chat" shortcut
+        if (urlParams.has('newChat') && urlParams.get('newChat') === 'true') {
+            console.log('Starting a new chat from PWA shortcut');
+            startNewChat();
+        }
+        
+        // Handle "History" shortcut
+        if (urlParams.has('openHistory') && urlParams.get('openHistory') === 'true') {
+            console.log('Opening history from PWA shortcut');
+            if (historyPanel) {
+                historyPanel.classList.add('active');
+            }
+        }
+        
+        // Clean URL if launched from PWA
+        if (urlParams.has('source') || urlParams.has('newChat') || urlParams.has('openHistory')) {
+            const cleanUrl = window.location.origin + window.location.pathname;
+            window.history.replaceState({}, document.title, cleanUrl);
+        }
+    }
+    
+    // Check if app is running as installed PWA
+    function checkPWAMode() {
+        const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+        
+        if (isStandalone) {
+            document.body.classList.add('pwa-mode');
+            console.log('Running in PWA mode');
+            
+            // Apply PWA-specific styles or behavior
+            applyPWAEnhancements();
+        }
+    }
+    
+    // Apply PWA-specific enhancements
+    function applyPWAEnhancements() {
+        // Makes elements draggable for window controls overlay
+        const dragRegions = document.querySelectorAll('.app-region-drag');
+        dragRegions.forEach(region => {
+            region.style.webkitAppRegion = 'drag';
+            region.style.appRegion = 'drag';
+        });
+        
+        const noDragRegions = document.querySelectorAll('.no-drag');
+        noDragRegions.forEach(region => {
+            region.style.webkitAppRegion = 'no-drag';
+            region.style.appRegion = 'no-drag';
+        });
+        
+        // Check for Android gesture navigation
+        if (navigator.userAgent.toLowerCase().includes('android')) {
+            // Add padding to bottom of scrollable areas
+            const scrollableAreas = document.querySelectorAll('.chat-container, .history-list');
+            scrollableAreas.forEach(area => {
+                area.style.paddingBottom = 'calc(1.5rem + var(--safe-area-inset-bottom))';
+            });
+        }
+    }
+    
+    // Run PWA checks and initialization
+    checkPWAMode();
+    handlePWALaunchParams();
+
     // Image handling elements
     const imageUploadContainer = document.getElementById('image-upload-container');
     const imageUploadBtn = document.getElementById('image-upload-btn');
@@ -204,7 +271,40 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Save to chat history
         chatHistory[currentChatId] = chat;
-        localStorage.setItem('claude_chat_history', JSON.stringify(chatHistory));
+        
+        try {
+            localStorage.setItem('claude_chat_history', JSON.stringify(chatHistory));
+        } catch (e) {
+            console.warn("Failed to save chat history:", e);
+            
+            // Handle quota exceeded error
+            if (e.name === 'QuotaExceededError' || e.toString().includes('quota')) {
+                // Get all chats and sort by timestamp (oldest first)
+                const entries = Object.entries(chatHistory);
+                if (entries.length > 10) {
+                    // Sort by timestamp (oldest first)
+                    entries.sort((a, b) => new Date(a[1].timestamp) - new Date(b[1].timestamp));
+                    
+                    // Remove oldest 30% of chats
+                    const removeCount = Math.max(Math.floor(entries.length * 0.3), 5);
+                    for (let i = 0; i < removeCount; i++) {
+                        if (entries[i][0] !== currentChatId) { // Don't delete current chat
+                            delete chatHistory[entries[i][0]];
+                        }
+                    }
+                    
+                    // Try to save again
+                    try {
+                        localStorage.setItem('claude_chat_history', JSON.stringify(chatHistory));
+                        console.log(`Removed ${removeCount} old chats from history to save space`);
+                    } catch (innerError) {
+                        // If still failing, show error message
+                        console.error("Storage quota exceeded even after cleanup:", innerError);
+                        addSystemMessage("Warning: Unable to save chat history due to browser storage limits. Consider exporting important chats or clearing old history.", true);
+                    }
+                }
+            }
+        }
         
         // Update history list if visible
         if (historyPanel && historyPanel.classList.contains('active')) {
@@ -2721,4 +2821,356 @@ Take your time to think through this carefully and provide a thorough analysis.`
         }
     `;
     document.head.appendChild(styleEl);
-}); 
+
+    // Function to clear all data
+    function clearAllData() {
+        // Ask for confirmation
+        if (!confirm('Are you sure you want to clear all data? This will delete:\n\n' +
+            '• All chat history\n' +
+            '• Response cache\n' +
+            '• Model performance metrics\n' +
+            '• Request count\n' +
+            '• All settings\n\n' +
+            'This action cannot be undone.')) return;
+        
+        try {
+            // Clear all localStorage items
+            localStorage.clear();
+            
+            // Reset variables
+            chatHistory = {};
+            responseCache = {};
+            modelPerformanceMetrics = {};
+            requestCount = 0;
+            performanceMode = false;
+            thinkingMode = false;
+            
+            // Reset UI elements
+            if (performanceModeToggle) performanceModeToggle.checked = false;
+            if (thinkingModeToggle) thinkingModeToggle.checked = false;
+            if (usageCounter) updateRequestCounter();
+            
+            // Clear chat messages and start new chat
+            startNewChat();
+            
+            // Update history list if visible
+            if (historyPanel && historyPanel.classList.contains('active')) {
+                renderChatHistory();
+            }
+            
+            // Show success message
+            addSystemMessage("All data has been cleared successfully.");
+            
+        } catch (error) {
+            console.error("Error clearing data:", error);
+            addSystemMessage("Error clearing data. Please try again.", true);
+        }
+    }
+    
+    // Add event listeners for clear data buttons
+    const clearDataBtn = document.getElementById('clear-data-btn');
+    const mobileClearDataBtn = document.getElementById('mobile-clear-data-btn');
+    
+    if (clearDataBtn) {
+        clearDataBtn.addEventListener('click', clearAllData);
+    }
+    
+    if (mobileClearDataBtn) {
+        mobileClearDataBtn.addEventListener('click', clearAllData);
+    }
+    
+    // Initialize model selection UI with any existing metrics
+    updateModelSelectionUI();
+
+    // Chat feature enhancements
+    document.addEventListener('DOMContentLoaded', function() {
+        // Message actions
+        document.addEventListener('click', function(e) {
+            // Reaction button
+            if (e.target.closest('.reaction-btn')) {
+                const btn = e.target.closest('.reaction-btn');
+                if (btn.classList.contains('add-reaction')) {
+                    showEmojiPicker(btn);
+                } else {
+                    toggleReaction(btn);
+                }
+            }
+            
+            // Copy message button
+            if (e.target.closest('.message-action-btn[title="Copy message"]')) {
+                const message = e.target.closest('.message-wrapper').querySelector('p').textContent;
+                copyToClipboard(message);
+                showToast('Message copied to clipboard');
+            }
+            
+            // Copy code button
+            if (e.target.closest('.code-block-btn[title="Copy code"]')) {
+                const code = e.target.closest('.code-block').querySelector('code').textContent;
+                copyToClipboard(code);
+                showToast('Code copied to clipboard');
+            }
+            
+            // Edit message button
+            if (e.target.closest('.message-action-btn[title="Edit message"]')) {
+                const messageWrapper = e.target.closest('.message-wrapper');
+                toggleMessageEdit(messageWrapper);
+            }
+            
+            // Thread reply button
+            if (e.target.closest('.message-action-btn[title="Reply in thread"]')) {
+                const messageWrapper = e.target.closest('.message-wrapper');
+                showThreadReply(messageWrapper);
+            }
+        });
+        
+        // Message search
+        const searchToggle = document.querySelector('#search-toggle');
+        const searchContainer = document.querySelector('#message-search');
+        const searchInput = searchContainer?.querySelector('input');
+        const searchResults = searchContainer?.querySelector('.search-results');
+        
+        if (searchToggle && searchContainer && searchInput && searchResults) {
+            searchToggle.addEventListener('click', () => {
+                searchContainer.classList.toggle('hidden');
+                if (!searchContainer.classList.contains('hidden')) {
+                    searchInput.focus();
+                }
+            });
+            
+            searchInput.addEventListener('input', debounce(() => {
+                const query = searchInput.value.toLowerCase();
+                if (query.length < 2) {
+                    searchResults.classList.remove('active');
+                    return;
+                }
+                
+                const messages = Array.from(document.querySelectorAll('.message-wrapper p'));
+                const matches = messages.filter(msg => 
+                    msg.textContent.toLowerCase().includes(query)
+                );
+                
+                displaySearchResults(matches, query);
+            }, 300));
+            
+            // Close search on escape
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') {
+                    searchContainer.classList.add('hidden');
+                    searchResults.classList.remove('active');
+                    searchInput.value = '';
+                }
+            });
+        }
+    });
+
+    // Utility functions
+    function copyToClipboard(text) {
+        navigator.clipboard.writeText(text).catch(err => {
+            console.error('Failed to copy text: ', err);
+        });
+    }
+
+    function showToast(message) {
+        const toast = document.createElement('div');
+        toast.className = 'fixed bottom-4 right-4 bg-gray-800 text-white px-4 py-2 rounded-lg shadow-lg z-50 animate-fade-in';
+        toast.textContent = message;
+        document.body.appendChild(toast);
+        
+        setTimeout(() => {
+            toast.remove();
+        }, 3000);
+    }
+
+    function toggleMessageEdit(messageWrapper) {
+        const editForm = messageWrapper.querySelector('.message-edit-form');
+        const messageText = messageWrapper.querySelector('p').textContent;
+        const textarea = editForm.querySelector('textarea');
+        
+        editForm.classList.toggle('active');
+        if (editForm.classList.contains('active')) {
+            textarea.value = messageText;
+            textarea.focus();
+        }
+        
+        // Handle save
+        editForm.querySelector('.edit-save-btn').onclick = () => {
+            messageWrapper.querySelector('p').textContent = textarea.value;
+            editForm.classList.remove('active');
+            showToast('Message updated');
+        };
+        
+        // Handle cancel
+        editForm.querySelector('.edit-cancel-btn').onclick = () => {
+            editForm.classList.remove('active');
+        };
+    }
+
+    function showThreadReply(messageWrapper) {
+        const thread = messageWrapper.querySelector('.message-thread');
+        if (thread) {
+            thread.classList.remove('hidden');
+        } else {
+            const newThread = document.createElement('div');
+            newThread.className = 'message-thread';
+            newThread.innerHTML = `
+                <div class="thread-indicator">
+                    <i class="fas fa-reply fa-rotate-180"></i>
+                    <span>Start a thread</span>
+                </div>
+            `;
+            messageWrapper.appendChild(newThread);
+        }
+    }
+
+    function toggleReaction(btn) {
+        const count = btn.querySelector('span:last-child');
+        const currentCount = parseInt(count.textContent);
+        count.textContent = btn.classList.contains('active') ? currentCount - 1 : currentCount + 1;
+        btn.classList.toggle('active');
+    }
+
+    function showEmojiPicker(btn) {
+        // Implementation would depend on your chosen emoji picker library
+        // For example, you could use emoji-mart or similar
+        console.log('Show emoji picker');
+    }
+
+    // Debounce utility
+    function debounce(func, wait) {
+        let timeout;
+        return function executedFunction(...args) {
+            const later = () => {
+                clearTimeout(timeout);
+                func(...args);
+            };
+            clearTimeout(timeout);
+            timeout = setTimeout(later, wait);
+        };
+    }
+
+    function displaySearchResults(matches, query) {
+        const searchResults = document.querySelector('.search-results');
+        if (!matches.length) {
+            searchResults.innerHTML = '<div class="p-4 text-gray-500">No messages found</div>';
+            searchResults.classList.add('active');
+            return;
+        }
+        
+        const html = matches.map(msg => {
+            const text = msg.textContent;
+            const index = text.toLowerCase().indexOf(query.toLowerCase());
+            const highlight = text.substring(index, index + query.length);
+            const highlighted = text.replace(
+                new RegExp(query, 'gi'),
+                `<span class="search-highlight">${highlight}</span>`
+            );
+            
+            return `
+                <div class="search-result-item">
+                    <div class="text-sm">${highlighted}</div>
+                    <div class="text-xs text-gray-500 mt-1">
+                        ${msg.closest('.message-wrapper').querySelector('.message-time').textContent}
+                    </div>
+                </div>
+            `;
+        }).join('');
+        
+        searchResults.innerHTML = html;
+        searchResults.classList.add('active');
+        
+        // Scroll to message when clicking result
+        searchResults.querySelectorAll('.search-result-item').forEach((item, i) => {
+            item.onclick = () => {
+                matches[i].scrollIntoView({ behavior: 'smooth', block: 'center' });
+                matches[i].classList.add('highlight-message');
+                setTimeout(() => matches[i].classList.remove('highlight-message'), 2000);
+                searchResults.classList.remove('active');
+            };
+        });
+    }
+
+    // Function to reload the service worker when app updates are available
+    function checkForAppUpdates() {
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.getRegistration().then(registration => {
+                if (registration) {
+                    registration.addEventListener('updatefound', () => {
+                        const newWorker = registration.installing;
+                        
+                        // App update notification
+                        newWorker.addEventListener('statechange', () => {
+                            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                                // New version available - show update notification
+                                showUpdateNotification();
+                            }
+                        });
+                    });
+                    
+                    // Check for updates
+                    registration.update();
+                }
+            });
+        }
+    }
+    
+    // Show update notification
+    function showUpdateNotification() {
+        // Create notification element
+        const notification = document.createElement('div');
+        notification.className = 'fixed bottom-0 inset-x-0 pb-safe z-50 pointer-events-none';
+        notification.innerHTML = `
+            <div class="m-4 p-4 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 pointer-events-auto flex items-center justify-between">
+                <span class="text-gray-800 dark:text-white">A new version is available</span>
+                <div class="flex space-x-2">
+                    <button id="update-later" class="px-3 py-1.5 text-sm bg-gray-100 dark:bg-gray-700 rounded-lg">Later</button>
+                    <button id="update-now" class="px-3 py-1.5 text-sm bg-purple-600 text-white rounded-lg">Update Now</button>
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(notification);
+        
+        // Handle update now button
+        document.getElementById('update-now').addEventListener('click', () => {
+            // Send message to service worker to skip waiting
+            navigator.serviceWorker.getRegistration().then(registration => {
+                if (registration.waiting) {
+                    registration.waiting.postMessage({ type: 'SKIP_WAITING' });
+                }
+                window.location.reload();
+            });
+        });
+        
+        // Handle later button
+        document.getElementById('update-later').addEventListener('click', () => {
+            notification.remove();
+        });
+    }
+    
+    // Check for app updates periodically
+    setTimeout(checkForAppUpdates, 5000);
+    setInterval(checkForAppUpdates, 3600000); // Check every hour
+    
+    // Add a handler for back/forward navigation in PWA
+    window.addEventListener('popstate', function(event) {
+        if (document.body.classList.contains('pwa-mode')) {
+            // If history panel is open, close it instead of navigating back
+            if (historyPanel && historyPanel.classList.contains('active')) {
+                historyPanel.classList.remove('active');
+                history.pushState(null, document.title, window.location.href);
+                event.preventDefault();
+                return;
+            }
+            
+            // If a modal is open, close it instead of navigating back
+            const activeModal = document.querySelector('.mobile-dialog.open');
+            if (activeModal) {
+                activeModal.classList.remove('open');
+                setTimeout(() => activeModal.remove(), 300);
+                history.pushState(null, document.title, window.location.href);
+                event.preventDefault();
+                return;
+            }
+        }
+    });
+});
