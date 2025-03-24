@@ -835,6 +835,11 @@ document.addEventListener('DOMContentLoaded', function() {
         if (modelSelector && modelSelector.value) {
             return modelSelector.value;
         }
+        // Also check mobile model selector
+        const mobileModelSelector = document.getElementById('mobile-model-selector');
+        if (mobileModelSelector && mobileModelSelector.value) {
+            return mobileModelSelector.value;
+        }
         return AI_MODELS[currentModelIndex];
     }
     
@@ -846,6 +851,12 @@ document.addEventListener('DOMContentLoaded', function() {
         // Update the model selector if it exists
         if (modelSelector) {
             modelSelector.value = newModel;
+        }
+        
+        // Update the mobile model selector if it exists
+        const mobileModelSelector = document.getElementById('mobile-model-selector');
+        if (mobileModelSelector) {
+            mobileModelSelector.value = newModel;
         }
         
         console.log(`Switching to model: ${newModel}`);
@@ -2221,47 +2232,58 @@ Take your time to think through this carefully and provide a thorough analysis.`
 
     // Function to enhance model selector with performance metrics
     function updateModelSelectionUI() {
-        if (!modelSelector) return;
+        // Update desktop model selector
+        if (modelSelector) {
+            updateSelectorOptions(modelSelector);
+        }
         
-        // Get all options
-        const options = Array.from(modelSelector.querySelectorAll('option'));
+        // Update mobile model selector
+        const mobileModelSelector = document.getElementById('mobile-model-selector');
+        if (mobileModelSelector) {
+            updateSelectorOptions(mobileModelSelector);
+        }
         
-        options.forEach(option => {
-            const model = option.value;
-            const metrics = modelPerformanceMetrics[model];
+        // Helper function to update a selector's options
+        function updateSelectorOptions(selector) {
+            // Get all options
+            const options = Array.from(selector.querySelectorAll('option'));
+            
+            options.forEach(option => {
+                const model = option.value;
+                const metrics = modelPerformanceMetrics[model];
 
-            if (metrics) {
-                // Format option text to include metrics
-                const baseName = formatModelName(model);
-                const avgTime = metrics.avgResponseTime.toFixed(1);
-                
-                // Style by response time - under 3s is fast, 3-6s is medium, over 6s is slow
-                let speedIndicator = '';
-                
-                if (metrics.avgResponseTime < 3) {
-                    speedIndicator = '⚡ '; // Fast
-                } else if (metrics.avgResponseTime < 6) {
-                    speedIndicator = '⏱️ '; // Medium
-                } else {
-                    speedIndicator = '🐢 '; // Slow
-                }
-                
-                
-                // Update option text with performance data
-                const description = option.textContent.split(' - ')[1] || '';
-                option.textContent = `${speedIndicator}${baseName} - ${description} (avg: ${avgTime}s)`;
+                if (metrics) {
+                    // Format option text to include metrics
+                    const baseName = formatModelName(model);
+                    const avgTime = metrics.avgResponseTime.toFixed(1);
+                    
+                    // Style by response time - under 3s is fast, 3-6s is medium, over 6s is slow
+                    let speedIndicator = '';
+                    
+                    if (metrics.avgResponseTime < 3) {
+                        speedIndicator = '⚡ '; // Fast
+                    } else if (metrics.avgResponseTime < 6) {
+                        speedIndicator = '⏱️ '; // Medium
+                    } else {
+                        speedIndicator = '🐢 '; // Slow
+                    }
+                    
+                    // Update option text with performance data
+                    const description = option.textContent.split(' - ')[1] || '';
+                    option.textContent = `${speedIndicator}${baseName} - ${description} (avg: ${avgTime}s)`;
 
-                // Add tooltip
-                const capabilities = getModelCapabilities(model);
-                const truncatedDescription = description.length > 50 ? description.substring(0, 50) + '...' : description;
-                let truncatedCapabilities = capabilities.slice(0, 3).map(cap => cap.name).join(', ');
-                if (capabilities.length > 3) {
-                    truncatedCapabilities += '...';
+                    // Add tooltip
+                    const capabilities = getModelCapabilities(model);
+                    const truncatedDescription = description.length > 50 ? description.substring(0, 50) + '...' : description;
+                    let truncatedCapabilities = capabilities.slice(0, 3).map(cap => cap.name).join(', ');
+                    if (capabilities.length > 3) {
+                        truncatedCapabilities += '...';
+                    }
+                    const tooltipText = `${truncatedDescription} Average response time: ${avgTime}s Capabilities: ${truncatedCapabilities}`;
+                    option.title = tooltipText;
                 }
-                const tooltipText = `${truncatedDescription} Average response time: ${avgTime}s Capabilities: ${truncatedCapabilities}`;
-                option.title = tooltipText;
-            }
-        });
+            });
+        }
     }
     // Initialize model selection UI with any existing metrics
     updateModelSelectionUI();
@@ -3173,4 +3195,26 @@ Take your time to think through this carefully and provide a thorough analysis.`
             }
         }
     });
+
+    // Sync the desktop and mobile model selectors
+    const syncModelSelectors = () => {
+        const mobileModelSelector = document.getElementById('mobile-model-selector');
+        if (modelSelector && mobileModelSelector) {
+            // Initial sync
+            mobileModelSelector.value = modelSelector.value;
+            
+            // Listen for changes on desktop selector
+            modelSelector.addEventListener('change', function() {
+                mobileModelSelector.value = modelSelector.value;
+            });
+            
+            // Listen for changes on mobile selector
+            mobileModelSelector.addEventListener('change', function() {
+                modelSelector.value = mobileModelSelector.value;
+            });
+        }
+    };
+
+    // Call sync function after UI initialization
+    syncModelSelectors();
 });
