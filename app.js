@@ -1,4 +1,18 @@
 document.addEventListener('DOMContentLoaded', function() {
+    
+    // Load custom prompts module
+    loadScript('modules/custom-prompts.js');
+    
+    function loadScript(src) {
+        return new Promise((resolve, reject) => {
+            const script = document.createElement('script');
+            script.src = src;
+            script.onload = () => resolve();
+            script.onerror = () => reject(new Error(`Failed to load script: ${src}`));
+            document.head.appendChild(script);
+        });
+    }
+    
     const chatForm = document.getElementById('chat-form');
     const userInput = document.getElementById('user-input');
     const chatContainer = document.getElementById('chat-container');
@@ -2290,7 +2304,22 @@ Take your time to think through this carefully and provide a thorough analysis.`
 
     // Keyboard shortcuts
     document.addEventListener('keydown', function(event) {
-        // Cmd/Ctrl + Enter to submit
+        // Enter to submit (single Enter key press)
+        if (event.key === 'Enter' && !event.shiftKey && !event.ctrlKey && !event.metaKey && !event.altKey) {
+            // Only handle Enter for textarea, not for other inputs
+            if (document.activeElement === userInput) {
+                event.preventDefault();
+                if (chatForm) chatForm.dispatchEvent(new Event('submit'));
+            }
+        }
+        
+        // Shift+Enter for newline in textarea
+        if (event.key === 'Enter' && event.shiftKey && document.activeElement === userInput) {
+            // Allow default behavior for Shift+Enter (newline)
+            return;
+        }
+        
+        // Keep Cmd/Ctrl + Enter functionality for compatibility
         if ((event.metaKey || event.ctrlKey) && event.key === 'Enter') {
             event.preventDefault();
             if (chatForm) chatForm.dispatchEvent(new Event('submit'));

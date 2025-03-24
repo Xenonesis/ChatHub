@@ -1325,4 +1325,168 @@ html.dark .glass-effect {
     border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
+/* Custom Prompt UI styles */
+.prompt-drawer {
+    z-index: 30;
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+    max-height: 70vh;
+    transition: transform 0.3s ease-in-out;
+}
+
+.prompt-category.active {
+    background-color: #f3e8ff;
+    color: #7e22ce;
+    font-weight: 500;
+}
+
+.prompt-item {
+    cursor: pointer;
+    position: relative;
+    transition: all 0.2s ease;
+}
+
+.prompt-item:hover {
+    background-color: rgba(124, 58, 237, 0.1);
+}
+
+.prompt-item.manage-mode:hover {
+    background-color: rgba(239, 68, 68, 0.1);
+    border-color: rgba(239, 68, 68, 0.3);
+}
+
+.delete-prompt-button {
+    opacity: 0;
+    transition: all 0.2s ease;
+}
+
+.prompt-item:hover .delete-prompt-button {
+    opacity: 1;
+}
+
+.prompt-notification {
+    font-size: 14px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    border-radius: 8px;
+    max-width: 300px;
+}
+
+.prompt-drawer-footer {
+    background-color: rgba(249, 250, 251, 0.8);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+}
+
+.import-dialog-overlay, .prompt-dialog-overlay {
+    backdrop-filter: blur(2px);
+    -webkit-backdrop-filter: blur(2px);
+}
+
+.import-dialog-content, .prompt-dialog-content {
+    max-height: 80vh;
+    overflow-y: auto;
+}
+
+/* Enhanced placeholder styles for prompt templates */
+.prompt-placeholder {
+    display: inline-block;
+    background-color: #e9d5ff;
+    color: #7e22ce;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 0.9em;
+    margin: 0 2px;
+}
+
+/* Dark mode support for prompt UI */
+.dark .prompt-drawer {
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.3);
+}
+
+.dark .prompt-category.active {
+    background-color: rgba(147, 51, 234, 0.3);
+    color: #c4b5fd;
+}
+
+.dark .prompt-item:hover {
+    background-color: rgba(124, 58, 237, 0.2);
+}
+
+.dark .prompt-item.manage-mode:hover {
+    background-color: rgba(239, 68, 68, 0.2);
+    border-color: rgba(239, 68, 68, 0.4);
+}
+
+.dark .prompt-placeholder {
+    background-color: rgba(147, 51, 234, 0.3);
+    color: #c4b5fd;
+}
+
+.dark .prompt-drawer-footer {
+    background-color: rgba(31, 41, 55, 0.8);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+}
+
+.dark .loading-shimmer {
+    animation: shimmer-dark 1.5s infinite linear;
+    background: linear-gradient(to right, #374151 0%, #4B5563 50%, #374151 100%);
+    background-size: 1000px 100%;
+}
+
+@keyframes shimmer-dark {
+    0% {
+        background-position: -1000px 0;
+    }
+    100% {
+        background-position: 1000px 0;
+    }
+}
+
+/* Mobile styling for prompt UI */
+@media (max-width: 640px) {
+    .prompt-drawer {
+        max-width: 85vw;
+    }
+    
+    .import-dialog-content, .prompt-dialog-content {
+        width: 90vw;
+        margin: 0 auto;
+    }
+}
+
+.prompt-item:hover .delete-prompt-button {
+    opacity: 1;
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+    display: none;
+}
+
+.hide-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
+.loading-shimmer {
+    animation: shimmer 1.5s infinite linear;
+    background: linear-gradient(to right, #e5e7eb 0%, #f3f4f6 50%, #e5e7eb 100%);
+    background-size: 1000px 100%;
+}
+
+@keyframes shimmer {
+    0% {
+        background-position: -1000px 0;
+    }
+    100% {
+        background-position: 1000px 0;
+    }
+}
+
+.prompt-notification {
+    font-size: 14px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    border-radius: 8px;
+    max-width: 300px;
+}
+
 
