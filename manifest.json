@@ -1,12 +1,12 @@
 {
   "name": "AI Chat Assistant",
   "short_name": "AI Chat",
-  "description": "Chat with multiple AI models including Claude, GPT-4o, Gemini, and DeepSeek",
+  "description": "Modern AI Chat Assistant - Chat with multiple AI models including Claude, GPT-4o, Gemini, and DeepSeek",
   "start_url": "/?source=pwa",
   "display": "standalone",
   "display_override": ["window-controls-overlay", "standalone", "minimal-ui"],
-  "background_color": "#7c3aed",
-  "theme_color": "#7c3aed",
+  "background_color": "#667eea",
+  "theme_color": "#667eea",
   "orientation": "any",
   "scope": "/",
   "launch_handler": {
@@ -18,13 +18,25 @@
       "name": "New Chat",
       "short_name": "New",
       "description": "Start a new chat",
-      "url": "/?newChat=true"
+      "url": "/?newChat=true",
+      "icons": [
+        {
+          "src": "icons/icon-96x96.png",
+          "sizes": "96x96"
+        }
+      ]
     },
     {
       "name": "Chat History",
       "short_name": "History",
       "description": "View your chat history",
-      "url": "/?openHistory=true"
+      "url": "/?openHistory=true",
+      "icons": [
+        {
+          "src": "icons/icon-96x96.png",
+          "sizes": "96x96"
+        }
+      ]
     }
   ],
   "handle_links": "preferred",
